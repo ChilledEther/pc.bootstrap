@@ -1,9 +1,36 @@
 tools:
-- name: wsl
-- name: git
-- name: gh-cli
-- name: bun
-- name: uv
-- name: vscode
-- name: antigravity
-- name: crush
+  windows:
+    native:
+      - name: wsl
+        install: wsl --install
+      - name: vscode
+        install: winget install Microsoft.VisualStudioCode
+    wsl:
+      - name: brew
+        install: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      - name: git
+        install: sudo apt install git
+      - name: powershell
+        install: sudo apt install powershell
+      - name: bun
+        install: curl -fsSL https://bun.sh/install | bash
+      - name: uv
+        install: brew install uv
+      - name: gh
+        install: brew install gh
+      - name: crush
+        install: brew install charmbracelet/tap/crush
+      - name: topgrade
+        install: brew install topgrade
+      - name: opentofu
+        install: brew install opentofu
+      - name: yq
+        install: brew install yq
+      - name: gemini-cli
+        install: brew install gemini-cli
+      - name: specify-cli
+        install: uv tool install specify-cli
+      - name: node
+        install: brew install node
+      - name: go
+        install: brew install go
