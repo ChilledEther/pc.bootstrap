@@ -1,0 +1,9 @@
+tools:
+- name: wsl
+- name: git
+- name: gh-cli
+- name: bun
+- name: uv
+- name: vscode
+- name: antigravity
+- name: crush
