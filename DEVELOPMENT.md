@@ -1,38 +1,45 @@
 # 🧠 Development & Knowledge Base
 
-This repository serves as a modern, declarative bootstrap system for Windows workstations using **WinGet** and **DSC v3**. 
+This repository serves as a modern, declarative bootstrap system for Windows workstations using **WinGet** and **DSC v3**.
+
+---
 
 ## 🏗️ Architecture Overview
 
-The project transitioned from a static `tools.yaml` manifest to a fully declarative **DSCv3** configuration. This allows for idempotent setup, where the system's state is defined rather than just running a list of install commands.
+The project uses a fully declarative **DSCv3** configuration for idempotent system setup.
 
 ### 📄 Core Files
 
-| File | Purpose | Key Standards |
-| :--- | :--- | :--- |
-| `configuration.yaml` | The Desired State definition (Template). | DSCv3 Schema 2023/08, Template Placeholders (`{{USER_PROFILE}}`). |
-| `Invoke-Bootstrap.ps1` | The automation engine & pre-processor. | Path detection, Template resolution, Fail-Fast. |
-| `wsl-tools.yaml` | Modular WSL tool manifest. | Compressed YAML, Enabled/Disabled toggles. |
-| `Invoke-WslBootstrap.ps1` | WSL-side automation. | PowerShell-based, APT/Brew/Bun handling. |
+| File | Purpose |
+| :--- | :--- |
+| `configuration.yaml` | Desired State definition (template with placeholders) |
+| `Invoke-Bootstrap.ps1` | Main automation engine |
+| `Invoke-Lint.ps1` | Configuration syntax validator |
+| `wsl-tools.yaml` | WSL development tools manifest |
+| `Invoke-WslBootstrap.ps1` | WSL environment setup script |
 
-### 📦 Prerequisites (DSC Modules)
+### 📚 Detailed Documentation
 
-Before running the bootstrap, ensure the following DSC modules are installed. These provide the native resources used in the configuration:
+See the `docs/` folder for detailed references:
+- **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource reference
+- **[docs/scripts.md](docs/scripts.md)** - Script usage and parameters
+
+---
+
+## 🚀 Quick Start
 
 ```powershell
-# Check available resources
-dsc resource list
+# Test configuration (show drift, no changes)
+.\Invoke-Bootstrap.ps1 -Test
 
-# Required modules (typically pre-installed with DSC v3)
-# - PSDesiredStateConfiguration/File  (for .wslconfig management)
-# - Microsoft.WinGet/Package          (for app installations)
-# - Microsoft.Windows/Registry        (for registry tweaks)
-# - Microsoft.Windows.Settings/WindowsSettings (for system preferences)
-```
+# Interactive apply (show drift, confirm, then apply)
+.\Invoke-Bootstrap.ps1
 
-If `PSDesiredStateConfiguration/File` is missing, install the module:
-```powershell
-Install-Module -Name PSDesiredStateConfiguration -Scope CurrentUser -Force
+# Force apply (skip confirmation)
+.\Invoke-Bootstrap.ps1 -Force
+
+# Lint only (validate YAML syntax)
+.\Invoke-Lint.ps1
 ```
 
 ---
@@ -40,53 +47,54 @@ Install-Module -Name PSDesiredStateConfiguration -Scope CurrentUser -Force
 ## 🛠️ Maintenance Guide
 
 ### ➕ Adding New Tools or Settings
-To add a new Windows package or Registry setting:
-1.  Open `configuration.yaml`.
-2.  Add a new block under `resources`. Use `Microsoft.WinGet/Package` for apps or `Microsoft.Windows/Registry` for tweaks.
-3.  **Template Variables**: Use `{{USER_PROFILE}}` for Windows home paths and `{{REPO_ROOT_WSL}}` for internal WSL repo paths.
 
-### 🧪 Validation & Application
-We use a **Template Strategy** because WinGet 1.12 does not yet support root-level parameters in the CLI validator.
-1.  **Do not** validate `configuration.yaml` directly if it has `{{PLACEHOLDERS}}`.
-2.  Run `.\Invoke-Bootstrap.ps1`. This script generates a temporary `resolved-configuration.yaml` with your actual machine paths and applies it.
+1. Open `configuration.yaml`
+2. Add a new resource block using kebab-case naming (inside-out)
+3. Use appropriate resource type:
+   - `Microsoft.WinGet/Package` - Install apps
+   - `Microsoft.Windows/Registry` - Registry tweaks
+   - `PSDesiredStateConfiguration/WindowsOptionalFeature` - Windows features
+   - `PSDesiredStateConfiguration/File` - File contents
 
-### ⚠️ Suppressing Informational Warnings
-The WinGet 1.12 validator outputs informational messages like:
-- *"The module was not provided..."*
-- *"The configuration unit is not available publicly..."*
+### 🔤 Template Placeholders
 
-These are **informational only** and appear on all DSCv3 configurations, including machine-exported ones. They cannot be resolved through YAML syntax. Use `--ignore-warnings` to suppress them:
-```powershell
-winget configure validate --file config.yaml --ignore-warnings
-```
-`Invoke-Bootstrap.ps1` automatically includes this flag.
+| Placeholder | Description |
+| :--- | :--- |
+| `{{USER_PROFILE}}` | Windows user profile path |
+| `{{REPO_ROOT_WSL}}` | Repository path inside WSL |
+
+### 🏷️ Naming Convention
+
+All resource names use **kebab-case** with **inside-out** naming:
+- ✅ `vscode-package`, `wsl-feature`, `explorer-show-hidden-files-registry`
+- ❌ `Install Visual Studio Code`, `package-vscode`
 
 ---
 
-## 📚 Technical Reference (Knowledge Base)
+## 📦 Prerequisites
 
-### 🔗 Useful Links & Schemas
-- **Stable DSCv3 Document Schema**: `https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json`
-- **WinGet Settings Schema**: `https://aka.ms/winget-settings.schema.json`
-- **Official Docs**: [WinGet Configuration](https://learn.microsoft.com/en-us/windows/package-manager/configuration/)
+Ensure DSC v3 and required modules are installed:
 
-### 🧩 DSCv3 Syntax Nuances (Stable track)
-- **DependsOn**: Use the simple resource `name` string.
-  - *Example*: `- "Install Ubuntu Linux Distribution"`
-- **Flattening**: DSCv3 flattens `settings` and `directives` into top-level keys like `name`, `type`, and `properties`.
-- **Processor Metadata**: We explicitly set the `dscv3` processor in the root metadata to unlock modern resource providers.
+```powershell
+# Check available resources
+dsc resource list
 
-### 🔍 Sources & Discovery
-- **Resource Investigation**: Use the `dsc` CLI to discover schemas:
-  - `dsc resource list`: Shows all available resources.
-  - `dsc resource schema --resource Microsoft.WinGet/Package`: Shows property requirements.
-- **Dynamic Pathing**: `Invoke-Bootstrap.ps1` calculates paths using `$env:USERPROFILE` and `wslpath` at runtime, ensuring the repo is portable for any user.
+# Key resources used:
+# - PSDesiredStateConfiguration/WindowsOptionalFeature
+# - PSDesiredStateConfiguration/File
+# - Microsoft.WinGet/Package
+# - Microsoft.Windows/Registry
+# - Microsoft.Windows.Settings/WindowsSettings
+```
 
 ---
 
 ## 🔮 Future Roadmap
-- **Schema Evolution**: Transition to `2024/04` schema once WinGet stable supports root-level `parameters:`.
-- **User Provisioning**: Automate default user creation in WSL distributions via DSC scripts.
+
+- **Schema Evolution**: Migrate to `2024/04` schema when WinGet supports root-level parameters
+- **Improved Drift Detection**: WinGet may add native drift reporting
+- **User Provisioning**: Automate WSL user creation
 
 ---
+
 *Maintained with ❤️ by Antigravity*

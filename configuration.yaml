@@ -4,16 +4,31 @@ metadata:
     processor:
       identifier: "dscv3"
 resources:
-  - name: wsl-package
-    type: Microsoft.WinGet/Package
+  # WSL requires two Windows features to be enabled
+  - name: wsl-feature
+    type: PSDesiredStateConfiguration/WindowsOptionalFeature
+    metadata:
+      winget:
+        securityContext: elevated
     properties:
-      id: Microsoft.WSL
-      source: winget
+      Name: Microsoft-Windows-Subsystem-Linux
+      Ensure: Present
 
+  - name: vm-platform-feature
+    type: PSDesiredStateConfiguration/WindowsOptionalFeature
+    metadata:
+      winget:
+        securityContext: elevated
+    properties:
+      Name: VirtualMachinePlatform
+      Ensure: Present
+
+  # Ubuntu distribution via WinGet (after features are enabled)
   - name: ubuntu-package
     type: Microsoft.WinGet/Package
     dependsOn:
-      - "wsl-package"
+      - "wsl-feature"
+      - "vm-platform-feature"
     properties:
       id: Canonical.Ubuntu
       source: winget

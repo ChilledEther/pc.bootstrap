@@ -1,57 +1,76 @@
 # 🚀 PC Bootstrap
 
-A modern, declarative approach to setting up and configuring a Windows development environment using **WinGet** and **DSC (Desired State Configuration)**.
+A modern, declarative approach to setting up and configuring a Windows development environment using **WinGet** and **DSC v3 (Desired State Configuration)**.
 
 ## ✨ Features
-- **Declarative Setup**: Manage your Windows packages and OS settings using a clean YAML configuration.
-- **Automated Installation**: One command to install VS Code, Docker, WSL, and more.
-- **Fail-Fast Scripting**: Robust PowerShell automation for reliable environment provisioning.
-- **DSCv3 Powered**: Utilizes the latest native DSCv3 resources for high-fidelity configuration.
+
+- **Declarative Setup**: Manage Windows packages and OS settings using clean YAML configuration
+- **Drift Detection**: See what's already configured vs. what needs changes
+- **Automated Installation**: One command to install VS Code, Docker, WSL, and more
+- **DSCv3 Powered**: Uses native DSCv3 resources for reliable configuration
+- **WSL Integration**: Automatically bootstraps your Linux development environment
 
 ## 📦 Prerequisites
+
 - **Windows 11** or **Windows 10** (latest updates)
-- **App Installer** (Winget) installed via the Microsoft Store.
-- **Administrative Privileges** for applying system-wide configurations.
+- **App Installer** (WinGet) installed via the Microsoft Store
+- **Administrative Privileges** for system-wide configurations
 
-## 🛠️ Usage & Workflow
+## 🛠️ Quick Start
 
-### 1. Validate Syntax
-Before running the installation, ensure your `configuration.yaml` is syntactically correct:
+### Test Configuration (Dry Run)
+See what's already in desired state and what would change:
 ```powershell
-winget configure validate --file configuration.yaml
+.\Invoke-Bootstrap.ps1 -Test
 ```
 
-### 2. Preview Changes (Dry Run)
-You can see which resources are already in the desired state and which ones will be modified by running a "test":
-```powershell
-winget configure test --file configuration.yaml
-```
-*This will output the status (InDesiredState or NotInDesiredState) for each resource without making changes.*
-
-### 3. Apply Configuration
-Run the automated bootstrap script in an **Administrative PowerShell** terminal:
+### Apply Configuration
+Run the bootstrap interactively (shows drift, asks for confirmation):
 ```powershell
 .\Invoke-Bootstrap.ps1
 ```
-Alternatively, apply the configuration manually:
+
+### Force Apply (No Confirmation)
+For automation/CI scenarios:
 ```powershell
-winget configure --file configuration.yaml --accept-configuration-agreements
+.\Invoke-Bootstrap.ps1 -Force
 ```
 
-### 4. Verify Installation
-After completion, you can verify that all packages are correctly installed by listing the configuration details:
+### Validate Syntax Only
 ```powershell
-winget configure show --file configuration.yaml
+.\Invoke-Lint.ps1
 ```
 
 ## 📂 Repository Structure
-- `configuration.yaml`: The main WinGet DSC configuration file (DSCv3).
-- `Invoke-Bootstrap.ps1`: Automation script for validation and application.
-- `config/tools.yaml`: The original tool manifest (kept for reference).
-- `DEVELOPMENT.md`: Detailed technical guide and knowledge base.
+
+```
+pc.bootstrap/
+├── configuration.yaml      # Main DSCv3 configuration (template)
+├── Invoke-Bootstrap.ps1    # Main automation script
+├── Invoke-Lint.ps1         # Configuration syntax validator
+├── Invoke-WslBootstrap.ps1 # WSL environment setup
+├── wsl-tools.yaml          # WSL development tools manifest
+├── DEVELOPMENT.md          # Development guide
+└── docs/                   # Detailed documentation
+    ├── dsc-resources.md    # DSCv3 resource reference
+    └── scripts.md          # Script usage reference
+```
 
 ## 🐧 WSL Configuration
-Once the Windows host is configured, initialize your WSL distribution and refer to `config/tools.yaml` for Linux-specific packages (brew, bun, etc.).
+
+The bootstrap automatically:
+1. Enables WSL and VirtualMachinePlatform Windows features
+2. Installs Ubuntu via WinGet
+3. Runs `Invoke-WslBootstrap.ps1` inside WSL to set up development tools
+
+WSL tools are defined in `wsl-tools.yaml` (APT packages, Homebrew formulas, Bun packages).
+
+## 📚 Documentation
+
+- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development guide and quick reference
+- **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource types reference
+- **[docs/scripts.md](docs/scripts.md)** - Script usage and parameters
 
 ---
+
 *Maintained with ❤️ by Antigravity*

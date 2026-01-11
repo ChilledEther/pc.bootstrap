@@ -68,7 +68,7 @@ foreach ($name in $nameToType.Keys) {
     $dscConfig = $dscConfig -replace "(?<=dependsOn:\s*\n(?:\s*-\s*.*\n)*\s*-\s*)""$name""", """[resourceId('$type', '$name')]"""
 }
 
-# Remove PSDesiredStateConfiguration/File resources (DSC parser can't handle multiline Contents)
+# Remove resources that DSC CLI can't handle (parser issues with multiline content)
 # These will still be applied by WinGet, just not drift-tested
 $dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*PSDesiredStateConfiguration/File.*?(?=^\s*-\s*name:|\z)', ''
 
