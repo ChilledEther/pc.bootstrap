@@ -24,20 +24,28 @@ resources:
       name: VirtualMachinePlatform
       enabled: true
 
-  # Ubuntu distribution via WinGet (after features are enabled)
-  - name: ubuntu-package
-    type: Microsoft.WinGet/Package
+  # Ubuntu distribution via WSL CLI
+  # Using PSDscResources/Script (modern Script resource, no WinRM)
+  - name: ubuntu-distro
+    type: PSDscResources/Script
     dependsOn:
-      - "wsl-feature"
-      - "vm-platform-feature"
+      - "[resourceId('PSDesiredStateConfiguration/WindowsOptionalFeature', 'wsl-feature')]"
+      - "[resourceId('PSDesiredStateConfiguration/WindowsOptionalFeature', 'vm-platform-feature')]"
     properties:
-      id: Canonical.Ubuntu
-      source: winget
+      GetScript: |
+        $distro = wsl --list --quiet | Where-Object { $_ -match "Ubuntu" }
+        return @{ Result = if ($distro) { "Present" } else { "Absent" } }
+      TestScript: |
+        $distro = wsl --list --quiet | Where-Object { $_ -match "Ubuntu" }
+        return [bool]$distro
+      SetScript: |
+        Write-Host "Installing Ubuntu via WSL..."
+        wsl --install -d Ubuntu
 
   - name: wsl-environment-init
     type: Microsoft.DSC.Transitional/RunCommandOnSet
     dependsOn:
-      - "ubuntu-package"
+      - "[resourceId('PSDscResources/Script', 'ubuntu-distro')]"
     properties:
       executable: wsl
       arguments:

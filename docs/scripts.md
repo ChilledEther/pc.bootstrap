@@ -33,12 +33,11 @@ The main bootstrap automation script.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  1. Detect dynamic paths ($env:USERPROFILE, wslpath)        │
-│  2. Resolve template placeholders in configuration.yaml    │
-│  3. Transform dependsOn syntax for DSC CLI compatibility   │
-│  4. Run DSC drift detection (shows ✅/⚠️ per resource)     │
-│  5. [If not -Test] Prompt for confirmation                  │
-│  6. [If confirmed or -Force] Apply via winget configure    │
-│  7. Cleanup temporary files                                 │
+│  2. Resolve template placeholders in configuration.yaml     │
+│  3. Run DSC drift detection (shows ✅/⚠️ per resource)      │
+│  4. [If not -Test] Prompt for confirmation                  │
+│  5. [If confirmed or -Force] Apply via dsc config set       │
+│  6. Cleanup temporary files                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -64,8 +63,7 @@ Validates the configuration YAML syntax.
 ```
 
 ### What It Does
-- Runs `winget configure validate` on configuration.yaml
-- Uses `--ignore-warnings` to suppress informational messages
+- Runs `dsc config validate` (planned) or basic validation
 - Returns exit code 0 on success, non-zero on failure
 
 ---
@@ -104,7 +102,6 @@ These files are created during execution and should be gitignored:
 | File | Purpose |
 | :--- | :--- |
 | `resolved-configuration.yaml` | Configuration with placeholders resolved |
-| `dsc-test-configuration.yaml` | Configuration transformed for DSC CLI testing |
 
 ---
 

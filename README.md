@@ -1,13 +1,13 @@
 # 🚀 PC Bootstrap
 
-A modern, declarative approach to setting up and configuring a Windows development environment using **WinGet** and **DSC v3 (Desired State Configuration)**.
+A modern, declarative approach to setting up and configuring a Windows development environment using **Native DSC v3**.
 
 ## ✨ Features
 
 - **Declarative Setup**: Manage Windows packages and OS settings using clean YAML configuration
 - **Drift Detection**: See what's already configured vs. what needs changes
 - **Automated Installation**: One command to install VS Code, Docker, WSL, and more
-- **DSCv3 Powered**: Uses native DSCv3 resources for reliable configuration
+- **Native DSCv3**: Uses the latest DSC engine for reliable, independent configuration
 - **WSL Integration**: Automatically bootstraps your Linux development environment
 
 ## 📦 Prerequisites

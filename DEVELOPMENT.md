@@ -1,12 +1,12 @@
 # 🧠 Development & Knowledge Base
 
-This repository serves as a modern, declarative bootstrap system for Windows workstations using **WinGet** and **DSC v3**.
+This repository serves as a modern, declarative bootstrap system for Windows workstations using **Native DSC v3**.
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The project uses a fully declarative **DSCv3** configuration for idempotent system setup.
+The project uses a fully declarative **DSCv3** configuration for idempotent system setup, orchestrated directly by the DSC CLI engine.
 
 ### 📄 Core Files
 
@@ -23,6 +23,10 @@ The project uses a fully declarative **DSCv3** configuration for idempotent syst
 See the `docs/` folder for detailed references:
 - **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource reference
 - **[docs/scripts.md](docs/scripts.md)** - Script usage and parameters
+
+### 🔗 Useful Links
+- **[Official DSC v3 Documentation](https://learn.microsoft.com/en-gb/powershell/dsc/overview?view=dsc-3.0&preserveView=true)**
+- [WinGet Configuration Docs](https://learn.microsoft.com/en-us/windows/package-manager/configuration/)
 
 ---
 

@@ -41,48 +41,12 @@ $resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
 $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
 
 # Test configuration and show drift
-# DSC CLI requires resourceId() syntax for dependsOn, but WinGet uses simple names
-# We transform on-the-fly for testing, keeping the source file WinGet-compatible
 Write-Host "📋 Checking configuration drift..." -ForegroundColor Cyan
 Write-Host ""
 
-# Build name-to-type map from the config
-$nameToType = @{}
-$configLines = $resolvedConfig -split "`n"
-$currentName = $null
-foreach ($line in $configLines) {
-    if ($line -match '^\s*-?\s*name:\s*(.+)$') {
-        $currentName = $matches[1].Trim()
-    }
-    if ($currentName -and $line -match '^\s*type:\s*(.+)$') {
-        $nameToType[$currentName] = $matches[1].Trim()
-        $currentName = $null
-    }
-}
-
-# Transform dependsOn from simple names to resourceId() syntax for DSC
-$dscConfig = $resolvedConfig
-foreach ($name in $nameToType.Keys) {
-    $type = $nameToType[$name]
-    # Replace "name" with "[resourceId('type', 'name')]" in dependsOn contexts
-    $dscConfig = $dscConfig -replace "(?<=dependsOn:\s*\n(?:\s*-\s*.*\n)*\s*-\s*)""$name""", """[resourceId('$type', '$name')]"""
-}
-
-# Remove resources that DSC CLI can't handle (WinGet-only adapters or parser issues)
-# These will still be applied by WinGet, just not drift-tested
-$dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*PSDesiredStateConfiguration/File.*?(?=^\s*-\s*name:|\z)', ''
-$dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*Microsoft\.Windows/OptionalFeature.*?(?=^\s*-\s*name:|\z)', ''
-
-# Remove dangling dependencies on the excluded resources
-# Matches: - "[resourceId('Microsoft.Windows/OptionalFeature', '... ')]"
-$dscConfig = $dscConfig -replace '(?m)^\s*-\s*\"\[resourceId\(''Microsoft\.Windows/OptionalFeature'',\s*''.+?''\)\]\"\s*$', ''
-
-$dscTestPath = "$PSScriptRoot\dsc-test-configuration.yaml"
-$dscConfig | Out-File -FilePath $dscTestPath -Encoding utf8
-
-# Try DSC test first (shows actual drift), fallback to WinGet test
-# TODO: When WinGet improves drift detection, this can be simplified
-$dscOutput = & dsc config test --file $dscTestPath 2>&1 | Out-String
+# Run DSC test using the resolved configuration directly
+# Native DSC v3 handles valid YAML directly
+$dscOutput = dsc config test --file $resolvedPath 2>&1 | Out-String
 
 if ($dscOutput -match '\"inDesiredState\"') {
     # Parse JSON and show drift status
@@ -112,17 +76,9 @@ if ($dscOutput -match '\"inDesiredState\"') {
         Write-Host $dscOutput
     }
 } else {
-    # Fallback to WinGet test (no drift info, just resource list)
     Write-Host "⚠️  DSC test failed. Error output:" -ForegroundColor Yellow
     Write-Host $dscOutput -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "Falling back to WinGet test (no drift detection)..." -ForegroundColor Yellow
-    & winget configure test --file $resolvedPath --ignore-warnings
 }
-
-# Cleanup DSC test file
-if (Test-Path $dscTestPath) { Remove-Item $dscTestPath }
-Write-Host ""
 
 # Exit early if test mode
 if ($Test) {
@@ -142,9 +98,9 @@ if (-not $Force) {
     }
 }
 
-# Apply configuration
+# Apply configuration using native DSC
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
-& winget configure --file $resolvedPath --accept-configuration-agreements --ignore-warnings
+dsc config set --file $resolvedPath
 
 # Cleanup temporary file
 if (Test-Path $resolvedPath) {

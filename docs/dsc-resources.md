@@ -119,28 +119,27 @@ Manages file contents (requires PowerShell DSC module).
 
 ---
 
-### Microsoft.DSC.Transitional/RunCommandOnSet
-Executes commands during the Set phase (not idempotent).
+### PSDscResources/Script
+Executes custom PowerShell scripts for Get/Test/Set operations (Modern version, no WinRM).
 
 ```yaml
-- name: wsl-environment-init
-  type: Microsoft.DSC.Transitional/RunCommandOnSet
+- name: ubuntu-distro
+  type: PSDscResources/Script
   properties:
-    executable: wsl
-    arguments:
-      - -u
-      - root
-      - -e
-      - pwsh
-      - -File
-      - "/path/to/script.ps1"
+    GetScript: |
+      return @{ Result = "Present" } # Logic here
+    TestScript: |
+      return $true # Logic here
+    SetScript: |
+      Write-Host "Setting..."
 ```
 
 **Properties:**
 | Property | Type | Description |
 | :--- | :--- | :--- |
-| `executable` | string | The command to run |
-| `arguments` | array | Command arguments |
+| `GetScript` | string | Script to get current state |
+| `TestScript` | string | Script to test state (returns boolean) |
+| `SetScript` | string | Script to enforce state |
 
 ---
 
@@ -176,11 +175,22 @@ These resources are available via the `Microsoft.Windows/WindowsPowerShell` adap
 
 ---
 
-## 🔗 Useful Commands
+## 🔍 Resource Discovery & Debugging
+
+To verify which resources are available to the DSC engine on your system:
 
 ```powershell
-# List all available DSC resources
+# 1. List all resources known to the DSCv3 CLI engine
+# Use this to verify if adapters (like WindowsPowerShell) are correctly exposing modules
 dsc resource list
+
+# 2. List installed PowerShell DSC resources (PowerShell Module view)
+# Use this to verify if modules like PSDscResources are installed
+Get-DscResource
+
+# 3. List resources exposed explicitly by the Windows PowerShell adapter
+# This filters the view to show exactly what the legacy adapter sees
+dsc resource list --adapter Microsoft.Windows/WindowsPowerShell
 
 # Get schema for a specific resource
 dsc resource schema --resource Microsoft.WinGet/Package
