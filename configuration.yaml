@@ -12,6 +12,16 @@ resources:
       source: winget
 
   - resource: Microsoft.WinGet.DSC/WinGetPackage
+    id: ubuntu
+    directives:
+      description: Install Ubuntu Linux Distribution
+      dependsOn:
+        - wsl
+    settings:
+      id: Canonical.Ubuntu
+      source: winget
+
+  - resource: Microsoft.WinGet.DSC/WinGetPackage
     id: vscode
     directives:
       description: Install Visual Studio Code
@@ -42,3 +52,16 @@ resources:
     settings:
       id: Microsoft.WindowsTerminal
       source: winget
+
+  - resource: PSDscResources/File
+    id: wsl-settings
+    directives:
+      description: Manage Global WSL Settings (.wslconfig)
+    settings:
+      DestinationPath: C:\Users\jjr\.wslconfig
+      Contents: |
+        [wsl2]
+        memory=8GB
+        processors=4
+        localhostForwarding=true
+      Ensure: Present
