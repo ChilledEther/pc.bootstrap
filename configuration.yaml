@@ -21,21 +21,21 @@ resources:
       id: Canonical.Ubuntu
       source: winget
 
-  - name: wsl-environment-init
-    type: Microsoft.DSC.Transitional/RunCommandOnSet
-    dependsOn:
-      - "[resourceId('Microsoft.WinGet/Package', 'ubuntu-distro')]"
-    properties:
-      executable: wsl
-      arguments:
-        - -u
-        - root
-        - -e
-        - pwsh
-        - -File
-        - "{{REPO_ROOT_WSL}}/Invoke-WslBootstrap.ps1"
-        - -RepoPath
-        - "{{REPO_ROOT_WSL}}"
+  # - name: wsl-environment-init
+  #   type: Microsoft.DSC.Transitional/RunCommandOnSet
+  #   dependsOn:
+  #     - "[resourceId('Microsoft.WinGet/Package', 'ubuntu-distro')]"
+  #   properties:
+  #     executable: wsl
+  #     arguments:
+  #       - -u
+  #       - root
+  #       - -e
+  #       - pwsh
+  #       - -File
+  #       - "{{REPO_ROOT_WSL}}/Invoke-WslBootstrap.ps1"
+  #       - -RepoPath
+  #       - "{{REPO_ROOT_WSL}}"
 
   - name: vscode-package
     type: Microsoft.WinGet/Package
