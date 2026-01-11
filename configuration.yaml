@@ -38,6 +38,54 @@ resources:
       id: Microsoft.WindowsTerminal
       source: winget
 
+  - name: Install Docker Desktop
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Docker.DockerDesktop
+      source: winget
+
+  - name: Install Git
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Git.Git
+      source: winget
+
+  - name: Install GitHub CLI
+    type: Microsoft.WinGet/Package
+    properties:
+      id: GitHub.cli
+      source: winget
+
+  - name: Install Notion
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Notion.Notion
+      source: winget
+
+  - name: Install Slack
+    type: Microsoft.WinGet/Package
+    properties:
+      id: SlackTechnologies.Slack
+      source: winget
+
+  - name: Install Discord
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Discord.Discord
+      source: winget
+
+  - name: Install Google Chrome
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Google.Chrome.EXE
+      source: winget
+
+  - name: Install Steam
+    type: Microsoft.WinGet/Package
+    properties:
+      id: Valve.Steam
+      source: winget
+
   - name: Manage Global WSL Settings (.wslconfig)
     type: PSDscResources/File
     properties:

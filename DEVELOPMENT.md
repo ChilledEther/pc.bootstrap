@@ -23,7 +23,7 @@ The project transitioned from a static `tools.yaml` manifest to a fully declarat
 To add a new Windows package or Registry setting:
 1.  Open `configuration.yaml`.
 2.  Add a new block under `resources`.
-3.  For apps: Use `Microsoft.WinGet.DSC/WinGetPackage`.
+3.  For apps: Use `Microsoft.WinGet/Package`.
 4.  For system settings (Dark Mode, Taskbar, etc.): Use the high-level `Microsoft.Windows.Settings/WindowsSettings` resource.
 5.  For specific registry tweaks: Use `Microsoft.Windows/Registry`.
 
@@ -63,7 +63,7 @@ When using **Context7** for updates, use the following Library ID:
 
 ### 🧩 DSCv3 Syntax Nuances
 - **DependsOn**: Must use the format `"[ResourceType]ResourceName"`. 
-  - *Example*: `"[Microsoft.WinGet.DSC/WinGetPackage]Install Windows Subsystem for Linux"`
+  - *Example*: `"[Microsoft.WinGet/Package]Install Windows Subsystem for Linux"`
 - **Flattening**: Unlike 0.2.0 which used `directives` and `settings`, DSCv3 flattens these into top-level keys like `name`, `type`, `dependsOn`, and `properties`.
 
 ### 🔍 Sources & Discovery
