@@ -5,24 +5,18 @@ metadata:
       identifier: "dscv3"
 resources:
   # WSL requires two Windows features to be enabled
-  # Note: These use WinGet-specific adapters (excluded from DSC drift testing)
+  # Using built-in PSDesiredStateConfiguration resources
   - name: wsl-feature
-    type: Microsoft.Windows/OptionalFeature
-    metadata:
-      winget:
-        securityContext: elevated
+    type: PSDesiredStateConfiguration/WindowsOptionalFeature
     properties:
-      name: Microsoft-Windows-Subsystem-Linux
-      enabled: true
+      Name: Microsoft-Windows-Subsystem-Linux
+      Ensure: Present
 
   - name: vm-platform-feature
-    type: Microsoft.Windows/OptionalFeature
-    metadata:
-      winget:
-        securityContext: elevated
+    type: PSDesiredStateConfiguration/WindowsOptionalFeature
     properties:
-      name: VirtualMachinePlatform
-      enabled: true
+      Name: VirtualMachinePlatform
+      Ensure: Present
 
   # Ubuntu distribution via WSL CLI
   # Using PSDscResources/Script (modern Script resource, no WinRM)
