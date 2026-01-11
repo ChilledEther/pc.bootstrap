@@ -4,27 +4,20 @@ metadata:
     processor:
       identifier: "dscv3"
 resources:
-  # WSL requires two Windows features to be enabled
-  # Using built-in PSDesiredStateConfiguration resources
-  - name: wsl-feature
-    type: PSDesiredStateConfiguration/WindowsOptionalFeature
+  # Modern WSL installation via WinGet (Store version)
+  # This avoids the legacy WMI/WS-Man 'Access Denied' errors from the PS adapter
+  - name: wsl-app
+    type: Microsoft.WinGet/Package
     properties:
-      Name: Microsoft-Windows-Subsystem-Linux
-      Ensure: Present
-
-  - name: vm-platform-feature
-    type: PSDesiredStateConfiguration/WindowsOptionalFeature
-    properties:
-      Name: VirtualMachinePlatform
-      Ensure: Present
+      id: Microsoft.WSL
+      source: winget
 
   # Ubuntu distribution via WSL CLI
   # Using PSDscResources/Script (modern Script resource, no WinRM)
   - name: ubuntu-distro
     type: PSDscResources/Script
     dependsOn:
-      - "[resourceId('PSDesiredStateConfiguration/WindowsOptionalFeature', 'wsl-feature')]"
-      - "[resourceId('PSDesiredStateConfiguration/WindowsOptionalFeature', 'vm-platform-feature')]"
+      - "[resourceId('Microsoft.WinGet/Package', 'wsl-app')]"
     properties:
       GetScript: |
         $distro = wsl --list --quiet | Where-Object { $_ -match "Ubuntu" }
@@ -124,16 +117,16 @@ resources:
       id: Valve.Steam
       source: winget
 
-  - name: wslconfig-file
-    type: PSDesiredStateConfiguration/File
-    properties:
-      DestinationPath: "{{USER_PROFILE}}\\.wslconfig"
-      Contents: |
-        [wsl2]
-        memory=8GB
-        processors=4
-        localhostForwarding=true
-      Ensure: Present
+  # - name: wslconfig-file
+  #   type: PSDesiredStateConfiguration/File
+  #   properties:
+  #     DestinationPath: "{{USER_PROFILE}}\\.wslconfig"
+  #     Contents: |
+  #       [wsl2]
+  #       memory=8GB
+  #       processors=4
+  #       localhostForwarding=true
+  #     Ensure: Present
 
   - name: winget-admin-settings
     type: Microsoft.WinGet/AdminSettings
