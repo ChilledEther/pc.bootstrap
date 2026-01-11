@@ -5,6 +5,12 @@ tools:
         install: wsl --install
       - name: vscode
         install: winget install Microsoft.VisualStudioCode
+      - name: googledrive
+        install: winget install -e --id Google.GoogleDrive
+      - name: google-antigravity
+        install: winget install -e --id Google.Antigravity
+      - name: windows-terminal
+        install: winget install -e --id Microsoft.WindowsTerminal
     wsl:
       - name: brew
         install: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -34,3 +40,6 @@ tools:
         install: brew install node
       - name: go
         install: brew install go
+
+---
+notes: winget source update
