@@ -68,9 +68,14 @@ foreach ($name in $nameToType.Keys) {
     $dscConfig = $dscConfig -replace "(?<=dependsOn:\s*\n(?:\s*-\s*.*\n)*\s*-\s*)""$name""", """[resourceId('$type', '$name')]"""
 }
 
-# Remove resources that DSC CLI can't handle (parser issues with multiline content)
+# Remove resources that DSC CLI can't handle (WinGet-only adapters or parser issues)
 # These will still be applied by WinGet, just not drift-tested
 $dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*PSDesiredStateConfiguration/File.*?(?=^\s*-\s*name:|\z)', ''
+$dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*Microsoft\.Windows/OptionalFeature.*?(?=^\s*-\s*name:|\z)', ''
+
+# Remove dangling dependencies on the excluded resources
+# Matches: - "[resourceId('Microsoft.Windows/OptionalFeature', '... ')]"
+$dscConfig = $dscConfig -replace '(?m)^\s*-\s*\"\[resourceId\(''Microsoft\.Windows/OptionalFeature'',\s*''.+?''\)\]\"\s*$', ''
 
 $dscTestPath = "$PSScriptRoot\dsc-test-configuration.yaml"
 $dscConfig | Out-File -FilePath $dscTestPath -Encoding utf8
