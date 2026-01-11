@@ -16,9 +16,28 @@ if ($Test) {
     Write-Host "⚡ Running in FORCE MODE (skipping confirmation)" -ForegroundColor Yellow
 }
 
-# Check if winget is available
+# Check if winget is available and responsive
+Write-Host "🔍 Checking WinGet health..." -ForegroundColor Yellow
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Error "❌ winget is not installed or not in PATH. Please install it from the Microsoft Store."
+    Write-Error "❌ WinGet is not installed or not in PATH. Please install it from the Microsoft Store."
+    exit 1
+}
+
+# Functional check to catch "File cannot be accessed" (1920) or "Invalid directory" (267) errors early
+try {
+    $wingetCheck = winget --version 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "WinGet returned exit code $LASTEXITCODE"
+    }
+    Write-Host "✅ WinGet is responsive (v$(($wingetCheck -join '').Trim()))" -ForegroundColor Green
+} catch {
+    Write-Host "❌ WinGet health check failed!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Error details: $_" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "💡 TIP: This often happens in Admin terminals or when running from WSL paths." -ForegroundColor Cyan
+    Write-Host "1. Try running: 'winget --version' directly to see the error." -ForegroundColor Cyan
+    Write-Host "2. Try repairing 'App Installer' in Windows Settings." -ForegroundColor Cyan
     exit 1
 }
 
@@ -45,8 +64,10 @@ Write-Host "📋 Checking configuration drift..." -ForegroundColor Cyan
 Write-Host ""
 
 # Run DSC test using the resolved configuration directly
-# Native DSC v3 handles valid YAML directly
+# Switch to a local Windows directory to avoid 'Invalid Directory' errors when running from WSL
+Push-Location $env:TEMP
 $dscOutput = dsc config test --file $resolvedPath 2>&1 | Out-String
+Pop-Location
 
 if ($dscOutput -match '\"inDesiredState\"') {
     # Parse JSON and show drift status
@@ -99,8 +120,13 @@ if ($dscOutput -match '\"inDesiredState\"') {
         Write-Host $dscOutput
     }
 } else {
-    Write-Host "⚠️  DSC test failed. Error output:" -ForegroundColor Yellow
+    Write-Host "❌ DSC test phase failed to execute correctly!" -ForegroundColor Red
+    Write-Host ""
     Write-Host $dscOutput -ForegroundColor Gray
+    Write-Host ""
+    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
+    Write-Error "Test phase failed. Cannot proceed safely."
+    exit 1
 }
 
 # Exit early if test mode
@@ -123,11 +149,30 @@ if (-not $Force) {
 
 # Apply configuration using native DSC
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
-dsc config set --file $resolvedPath
+Push-Location $env:TEMP
+$setConfigOutput = dsc config set --file $resolvedPath 2>&1 | Out-String
+Pop-Location
 
-# Cleanup temporary file
+# Parse the set output to verify success
+$setSuccess = $true
+if ($setConfigOutput -match '\"hadErrors\":\s*true') {
+    $setSuccess = $false
+} elseif ($LASTEXITCODE -ne 0) {
+    $setSuccess = $false
+}
+
+# Cleanup temporary file before potentially exiting
 if (Test-Path $resolvedPath) {
     Remove-Item $resolvedPath
+}
+
+if (-not $setSuccess) {
+    Write-Host "❌ Apply failed! See error output below:" -ForegroundColor Red
+    Write-Host ""
+    Write-Host $setConfigOutput -ForegroundColor Gray
+    Write-Host ""
+    Write-Error "Configuration apply failed. Please review the errors above."
+    exit 1
 }
 
 Write-Host "✅ Setup completed successfully!" -ForegroundColor Green
