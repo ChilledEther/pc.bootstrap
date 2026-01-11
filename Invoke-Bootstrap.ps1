@@ -31,9 +31,33 @@ if ($LASTEXITCODE -gt 1) {
     exit $LASTEXITCODE
 }
 
-# Exit early if this is a test run
+# If test mode, resolve template and run 'winget configure test' to show drift
 if ($Test) {
-    Write-Host "✅ Validation passed. (Test mode - no changes applied)" -ForegroundColor Green
+    Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
+    $userProfile = $env:USERPROFILE
+    $repoRootWin = $PSScriptRoot
+    $repoRootWsl = (wsl -e wslpath -u "$repoRootWin").Trim()
+    
+    Write-Host "🧩 Resolving configuration template..." -ForegroundColor Yellow
+    $configTemplate = Get-Content -Path "$PSScriptRoot\configuration.yaml" -Raw
+    $resolvedConfig = $configTemplate `
+        -replace "\{\{USER_PROFILE\}\}", $userProfile.Replace('\', '\\') `
+        -replace "\{\{REPO_ROOT_WSL\}\}", $repoRootWsl
+    
+    $resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
+    $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
+    
+    Write-Host "🔬 Comparing configuration against current system state..." -ForegroundColor Cyan
+    $testArgs = @(
+        "--file", $resolvedPath,
+        "--ignore-warnings"
+    )
+    & winget configure test @testArgs
+    
+    # Cleanup
+    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
+    
+    Write-Host "✅ Test complete. (No changes applied)" -ForegroundColor Green
     exit 0
 }
 
