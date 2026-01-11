@@ -10,8 +10,8 @@ The project transitioned from a static `tools.yaml` manifest to a fully declarat
 
 | File | Purpose | Key Standards |
 | :--- | :--- | :--- |
-| `configuration.yaml` | The Desired State definition. | DSCv3 Schema, Flattened properties, Resource Names. |
-| `Invoke-Bootstrap.ps1` | The automation engine. | Verb-Noun naming, Splatting, Fail-Fast ($ErrorActionPreference). |
+| `configuration.yaml` | The Desired State definition. | DSCv3 Schema, Registry Settings (Dark Mode, Explorer), WSL Config. |
+| `Invoke-Bootstrap.ps1` | The automation engine. | Verb-Noun naming, Splatting, Fail-Fast. |
 | `README.md` | User-facing documentation. | Premium aesthetics, Emojis, Clear Quick Start. |
 | `config/tools.yaml` | Legacy source of truth. | Kept for historical reference/WSL tool list. |
 
@@ -19,19 +19,23 @@ The project transitioned from a static `tools.yaml` manifest to a fully declarat
 
 ## 🛠️ Maintenance Guide
 
-### ➕ Adding New Tools
-To add a new Windows package:
+### ➕ Adding New Tools or Settings
+To add a new Windows package or Registry setting:
 1.  Open `configuration.yaml`.
 2.  Add a new block under `resources`.
-3.  Use the `Microsoft.WinGet.DSC/WinGetPackage` type.
-4.  Ensure you provide a descriptive `name` and the correct `id` from `winget search`.
+3.  For apps: Use `Microsoft.WinGet.DSC/WinGetPackage`.
+4.  For system settings (Dark Mode, Taskbar, etc.): Use the high-level `Microsoft.Windows.Settings/WindowsSettings` resource.
+5.  For specific registry tweaks: Use `Microsoft.Windows/Registry`.
 
 ```yaml
-  - name: Install My New Tool
-    type: Microsoft.WinGet.DSC/WinGetPackage
+  - name: WindowsSettings
+    type: Microsoft.Windows.Settings/WindowsSettings
+    metadata:
+      allowPrerelease: true # Required for advanced settings
+      securityContext: elevated
     properties:
-      id: Publisher.ToolID
-      source: winget
+      AppColorMode: Dark
+      TaskbarAlignment: Center
 ```
 
 ### ⚙️ Configuring System Settings
@@ -61,6 +65,14 @@ When using **Context7** for updates, use the following Library ID:
 - **DependsOn**: Must use the format `"[ResourceType]ResourceName"`. 
   - *Example*: `"[Microsoft.WinGet.DSC/WinGetPackage]Install Windows Subsystem for Linux"`
 - **Flattening**: Unlike 0.2.0 which used `directives` and `settings`, DSCv3 flattens these into top-level keys like `name`, `type`, `dependsOn`, and `properties`.
+
+### 🔍 Sources & Discovery
+The information for advanced resources like `Microsoft.Windows.Settings/WindowsSettings` was sourced from:
+- **GitHub Samples**: The [microsoft/winget-dsc](https://github.com/microsoft/winget-dsc) repository contains the latest community and official samples for WinGet Configuration.
+- **Resource Investigation**: Use the `dsc` CLI to discover schemas directly on your machine:
+  - `dsc resource list`: Shows all available resources.
+  - `dsc resource schema --resource <Name>`: Shows the exact properties (like `AppColorMode` or `TaskbarAlignment`).
+- **Visual Reference**: Community snippets often circulate with `allowPrerelease: true` to unlock early-access DSCv3 features.
 
 ---
 
