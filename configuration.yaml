@@ -1,39 +1,39 @@
 $schema: https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json
 resources:
   - name: Install Windows Subsystem for Linux
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.WSL
       source: winget
 
   - name: Install Ubuntu Linux Distribution
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     dependsOn:
-      - "[Microsoft.WinGet.DSC/WinGetPackage]Install Windows Subsystem for Linux"
+      - "[Microsoft.WinGet/Package]Install Windows Subsystem for Linux"
     properties:
       id: Canonical.Ubuntu
       source: winget
 
   - name: Install Visual Studio Code
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.VisualStudioCode
       source: winget
 
   - name: Install Google Drive
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     properties:
       id: Google.GoogleDrive
       source: winget
 
   - name: Install Google Antigravity
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     properties:
       id: Google.Antigravity
       source: winget
 
   - name: Install Windows Terminal
-    type: Microsoft.WinGet.DSC/WinGetPackage
+    type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.WindowsTerminal
       source: winget
