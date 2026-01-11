@@ -1,0 +1,19 @@
+tools:
+  apt:
+    git: { enabled: true }
+    powershell: { enabled: true }
+    curl: { enabled: true }
+    wget: { enabled: true }
+    build-essential: { enabled: true }
+  brew:
+    bun: { enabled: true }
+    uv: { enabled: true }
+    gh: { enabled: true }
+    topgrade: { enabled: true }
+    opentofu: { enabled: true }
+    yq: { enabled: true }
+    node: { enabled: true }
+    go: { enabled: true }
+  uv:
+    # Example for future uv-specific tool installations
+    # ruff: { enabled: true }

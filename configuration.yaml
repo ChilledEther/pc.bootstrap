@@ -14,6 +14,20 @@ resources:
       id: Canonical.Ubuntu
       source: winget
 
+  - name: Initialize WSL Environment
+    type: Microsoft.DSC.Transitional/RunCommandOnSet
+    dependsOn:
+      - "[Microsoft.WinGet/Package]Install Ubuntu Linux Distribution"
+    properties:
+      executable: wsl
+      arguments:
+        - -u
+        - root
+        - -e
+        - pwsh
+        - -File
+        - /home/jjr/projects/repos/pc.bootstrap/Invoke-WslBootstrap.ps1
+
   - name: Install Visual Studio Code
     type: Microsoft.WinGet/Package
     properties:
