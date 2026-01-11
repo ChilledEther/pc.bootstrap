@@ -10,6 +10,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Starting PC Bootstrap Setup..." -ForegroundColor Cyan
+if ($Test) {
+    Write-Host "🧪 Running in TEST MODE (no changes will be applied)" -ForegroundColor Magenta
+} elseif ($Force) {
+    Write-Host "⚡ Running in FORCE MODE (skipping confirmation)" -ForegroundColor Yellow
+}
 
 # Check if winget is available
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
