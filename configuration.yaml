@@ -4,24 +4,24 @@ metadata:
     processor:
       identifier: "dscv3"
 resources:
-  - name: Install Windows Subsystem for Linux
+  - name: wsl-package
     type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.WSL
       source: winget
 
-  - name: Install Ubuntu Linux Distribution
+  - name: ubuntu-package
     type: Microsoft.WinGet/Package
     dependsOn:
-      - "Install Windows Subsystem for Linux"
+      - "wsl-package"
     properties:
       id: Canonical.Ubuntu
       source: winget
 
-  - name: Initialize WSL Environment
+  - name: wsl-environment-init
     type: Microsoft.DSC.Transitional/RunCommandOnSet
     dependsOn:
-      - "Install Ubuntu Linux Distribution"
+      - "ubuntu-package"
     properties:
       executable: wsl
       arguments:
@@ -34,79 +34,79 @@ resources:
         - -RepoPath
         - "{{REPO_ROOT_WSL}}"
 
-  - name: Install Visual Studio Code
+  - name: vscode-package
     type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.VisualStudioCode
       source: winget
 
-  - name: Install Google Drive
+  - name: google-drive-package
     type: Microsoft.WinGet/Package
     properties:
       id: Google.GoogleDrive
       source: winget
 
-  - name: Install Google Antigravity
+  - name: antigravity-package
     type: Microsoft.WinGet/Package
     properties:
       id: Google.Antigravity
       source: winget
 
-  - name: Install Windows Terminal
+  - name: windows-terminal-package
     type: Microsoft.WinGet/Package
     properties:
       id: Microsoft.WindowsTerminal
       source: winget
 
-  - name: Install Docker Desktop
+  - name: docker-desktop-package
     type: Microsoft.WinGet/Package
     properties:
       id: Docker.DockerDesktop
       source: winget
 
-  - name: Install Git
+  - name: git-package
     type: Microsoft.WinGet/Package
     properties:
       id: Git.Git
       source: winget
 
-  - name: Install GitHub CLI
+  - name: github-cli-package
     type: Microsoft.WinGet/Package
     properties:
       id: GitHub.cli
       source: winget
 
-  - name: Install Notion
+  - name: notion-package
     type: Microsoft.WinGet/Package
     properties:
       id: Notion.Notion
       source: winget
 
-  - name: Install Slack
+  - name: slack-package
     type: Microsoft.WinGet/Package
     properties:
       id: SlackTechnologies.Slack
       source: winget
 
-  - name: Install Discord
+  - name: discord-package
     type: Microsoft.WinGet/Package
     properties:
       id: Discord.Discord
       source: winget
 
-  - name: Install Google Chrome
+  - name: chrome-package
     type: Microsoft.WinGet/Package
     properties:
       id: Google.Chrome.EXE
       source: winget
 
-  - name: Install Steam
+  - name: steam-package
     type: Microsoft.WinGet/Package
     properties:
       id: Valve.Steam
       source: winget
 
-  - name: Manage Global WSL Settings (.wslconfig)
+  - name: wslconfig-file
     type: PSDscResources/File
     properties:
       DestinationPath: "{{USER_PROFILE}}\\.wslconfig"
@@ -117,7 +117,7 @@ resources:
         localhostForwarding=true
       Ensure: Present
 
-  - name: WinGet Admin Settings
+  - name: winget-admin-settings
     type: Microsoft.WinGet/AdminSettings
     metadata:
       winget:
@@ -130,7 +130,7 @@ resources:
         InstallerHashOverride: false
         LocalArchiveMalwareScanOverride: false
 
-  - name: Windows Personalization Settings
+  - name: windows-personalization-settings
     type: Microsoft.Windows.Settings/WindowsSettings
     metadata:
       winget:
@@ -143,7 +143,7 @@ resources:
       DeveloperMode: true
       TaskbarAlignment: Middle
 
-  - name: Show Hidden Files in Explorer
+  - name: explorer-show-hidden-files-registry
     type: Microsoft.Windows/Registry
     properties:
       keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
@@ -151,7 +151,7 @@ resources:
       valueData:
         DWord: 1
 
-  - name: Show File Extensions in Explorer
+  - name: explorer-show-file-extensions-registry
     type: Microsoft.Windows/Registry
     properties:
       keyPath: HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
