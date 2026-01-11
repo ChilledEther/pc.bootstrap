@@ -1,14 +1,17 @@
 [CmdletBinding()]
 param(
-    [Parameter(HelpMessage = "Run validation only without applying the configuration.")]
-    [switch]$Test
+    [Parameter(HelpMessage = "Run test only without applying the configuration.")]
+    [switch]$Test,
+    
+    [Parameter(HelpMessage = "Skip confirmation prompt and apply changes immediately.")]
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Starting PC Bootstrap Setup..." -ForegroundColor Cyan
 if ($Test) {
-    Write-Host "🧪 Running in TEST MODE (validation only, no changes will be applied)" -ForegroundColor Magenta
+    Write-Host "🧪 Running in TEST MODE (no changes will be applied)" -ForegroundColor Magenta
 }
 
 # Check if winget is available
@@ -31,36 +34,7 @@ if ($LASTEXITCODE -gt 1) {
     exit $LASTEXITCODE
 }
 
-# If test mode, resolve template and run 'winget configure test' to show drift
-if ($Test) {
-    Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
-    $userProfile = $env:USERPROFILE
-    $repoRootWin = $PSScriptRoot
-    $repoRootWsl = (wsl -e wslpath -u "$repoRootWin").Trim()
-    
-    Write-Host "🧩 Resolving configuration template..." -ForegroundColor Yellow
-    $configTemplate = Get-Content -Path "$PSScriptRoot\configuration.yaml" -Raw
-    $resolvedConfig = $configTemplate `
-        -replace "\{\{USER_PROFILE\}\}", $userProfile.Replace('\', '\\') `
-        -replace "\{\{REPO_ROOT_WSL\}\}", $repoRootWsl
-    
-    $resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
-    $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
-    
-    Write-Host "🔬 Comparing configuration against current system state..." -ForegroundColor Cyan
-    $testArgs = @(
-        "--file", $resolvedPath,
-        "--ignore-warnings"
-    )
-    & winget configure test @testArgs
-    
-    # Cleanup
-    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
-    
-    Write-Host "✅ Test complete. (No changes applied)" -ForegroundColor Green
-    exit 0
-}
-
+# Resolve template placeholders
 Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
 $userProfile = $env:USERPROFILE
 $repoRootWin = $PSScriptRoot
@@ -70,22 +44,47 @@ Write-Host "📍 User Profile: $userProfile" -ForegroundColor Gray
 Write-Host "📍 WSL Repo Root: $repoRootWsl" -ForegroundColor Gray
 
 Write-Host "🧩 Resolving configuration template..." -ForegroundColor Yellow
-$configTemplate = Get-Content -Path ".\configuration.yaml" -Raw
+$configTemplate = Get-Content -Path "$PSScriptRoot\configuration.yaml" -Raw
 $resolvedConfig = $configTemplate `
     -replace "\{\{USER_PROFILE\}\}", $userProfile.Replace('\', '\\') `
     -replace "\{\{REPO_ROOT_WSL\}\}", $repoRootWsl
 
-$resolvedPath = ".\resolved-configuration.yaml"
+$resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
 $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
+
+# Always run test to show drift
+Write-Host "🔬 Comparing configuration against current system state..." -ForegroundColor Cyan
+$testArgs = @(
+    "--file", $resolvedPath,
+    "--ignore-warnings"
+)
+& winget configure test @testArgs
+
+# Exit early if test mode
+if ($Test) {
+    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
+    Write-Host "✅ Test complete. (No changes applied)" -ForegroundColor Green
+    exit 0
+}
+
+# Prompt for confirmation unless -Force is specified
+if (-not $Force) {
+    Write-Host ""
+    $response = Read-Host "❓ Do you want to apply these changes? (y/N)"
+    if ($response -notmatch "^[Yy]$") {
+        if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
+        Write-Host "🚫 Cancelled. No changes applied." -ForegroundColor Yellow
+        exit 0
+    }
+}
 
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
 $applyArgs = @(
-    "configure",
     "--file", $resolvedPath,
     "--accept-configuration-agreements",
     "--ignore-warnings"
 )
-& winget @applyArgs
+& winget configure @applyArgs
 
 # Cleanup temporary file
 if (Test-Path $resolvedPath) {
