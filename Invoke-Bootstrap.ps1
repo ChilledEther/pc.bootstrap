@@ -16,12 +16,10 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
 
 Write-Host "🔍 Validating configuration..." -ForegroundColor Yellow
 $validateArgs = @(
-    "configure",
-    "validate",
-    "--file", ".\configuration.yaml",
+    "--file", "$PSScriptRoot\configuration.yaml",
     "--ignore-warnings"
 )
-& winget @validateArgs
+& winget configure validate @validateArgs
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "❌ Configuration validation failed."
