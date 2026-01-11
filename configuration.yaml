@@ -30,9 +30,9 @@ resources:
         - -e
         - pwsh
         - -File
-        - "/tmp/Invoke-WslBootstrap.ps1" # We will handle pathing in the script
+        - "{{REPO_ROOT_WSL}}/Invoke-WslBootstrap.ps1"
         - -RepoPath
-        - "/tmp"
+        - "{{REPO_ROOT_WSL}}"
 
   - name: Install Visual Studio Code
     type: Microsoft.WinGet/Package
@@ -109,7 +109,7 @@ resources:
   - name: Manage Global WSL Settings (.wslconfig)
     type: PSDscResources/File
     properties:
-      DestinationPath: "$HOME/.wslconfig" # Using environment variable symbol
+      DestinationPath: "{{USER_PROFILE}}\\.wslconfig"
       Contents: |
         [wsl2]
         memory=8GB
