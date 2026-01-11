@@ -69,6 +69,29 @@ if ($dscOutput -match '\"inDesiredState\"') {
                 Write-Host "✅ $type [$name]" -ForegroundColor Green
             } else {
                 Write-Host "⚠️  $type [$name] - DRIFT DETECTED" -ForegroundColor Yellow
+                
+                $actual = $resource.result.actualState
+                $desired = $resource.result.desiredState
+                $diffs = $resource.result.differingProperties
+                
+                # Unwrap 'properties' if present
+                if ($actual.properties) { $actual = $actual.properties }
+                if ($desired.properties) { $desired = $desired.properties }
+                
+                if ($desired) {
+                    foreach ($prop in $desired.PSObject.Properties.Name) {
+                        $desiredVal = $desired.$prop
+                        
+                        # Check if this property is explicitly listed in the 'differingProperties' array
+                        $isDiff = $diffs -contains $prop
+                        
+                        if ($isDiff) {
+                            # Try to get actual value, but fall back to 'Unknown' if the provider doesn't return it during test
+                            $actualVal = if ($actual.$prop -ne $null) { $actual.$prop } else { "Unknown" }
+                            Write-Host "    - $($prop): '$($actualVal)' -> Desired: '$($desiredVal)'" -ForegroundColor Gray
+                        }
+                    }
+                }
             }
         }
     } catch {
