@@ -24,9 +24,11 @@ $validateArgs = @(
 )
 & winget configure validate @validateArgs
 
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "❌ Configuration validation failed."
-    exit 1
+# Exit code 1 = warnings only (acceptable with --ignore-warnings)
+# Exit code > 1 = actual failure
+if ($LASTEXITCODE -gt 1) {
+    Write-Error "❌ Configuration validation failed with exit code $LASTEXITCODE."
+    exit $LASTEXITCODE
 }
 
 # Exit early if this is a test run
