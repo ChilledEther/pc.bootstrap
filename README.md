@@ -1,0 +1,1 @@
+This uses winget along with DSC to setup and configure a windows environment
