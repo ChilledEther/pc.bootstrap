@@ -53,7 +53,7 @@ winget configure validate --file configuration.yaml
 ## 📚 Technical Reference (Knowledge Base)
 
 ### 🔗 Useful Links & Schemas
-- **Latest DSCv3 Document Schema**: `https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json`
+- **Latest DSCv3 Document Schema**: `https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json`
 - **WinGet Settings Schema**: `https://aka.ms/winget-settings.schema.json`
 - **Official Docs**: [WinGet Configuration](https://learn.microsoft.com/en-us/windows/package-manager/configuration/)
 
