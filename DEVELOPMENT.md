@@ -62,8 +62,8 @@ When using **Context7** for updates, use the following Library ID:
 - `/microsoft/winget-cli` (Contains 900+ snippets for Winget & DSC)
 
 ### 🧩 DSCv3 Syntax Nuances
-- **DependsOn**: Must use the format `"[ResourceType]ResourceName"`. 
-  - *Example*: `"[Microsoft.WinGet/Package]Install Windows Subsystem for Linux"`
+- **DependsOn**: For the `2023/08` schema, reference dependencies using their simple `name` string.
+  - *Example*: `- "Install Windows Subsystem for Linux"`
 - **Flattening**: Unlike 0.2.0 which used `directives` and `settings`, DSCv3 flattens these into top-level keys like `name`, `type`, `dependsOn`, and `properties`.
 - **Parameterization**: We use the `[[parameters('name')]]` syntax for dynamic paths. These are passed during execution via the `--parameter` flag in `Invoke-Bootstrap.ps1`.
 

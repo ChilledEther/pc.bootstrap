@@ -3,13 +3,6 @@ metadata:
   winget:
     processor:
       identifier: "dscv3"
-parameters:
-  UserProfile:
-    type: string
-    description: Windows User Profile path
-  RepoRootLinux:
-    type: string
-    description: Repository root path inside WSL
 resources:
   - name: Install Windows Subsystem for Linux
     type: Microsoft.WinGet/Package
@@ -20,7 +13,7 @@ resources:
   - name: Install Ubuntu Linux Distribution
     type: Microsoft.WinGet/Package
     dependsOn:
-      - "[Microsoft.WinGet/Package]Install Windows Subsystem for Linux"
+      - "Install Windows Subsystem for Linux"
     properties:
       id: Canonical.Ubuntu
       source: winget
@@ -28,7 +21,7 @@ resources:
   - name: Initialize WSL Environment
     type: Microsoft.DSC.Transitional/RunCommandOnSet
     dependsOn:
-      - "[Microsoft.WinGet/Package]Install Ubuntu Linux Distribution"
+      - "Install Ubuntu Linux Distribution"
     properties:
       executable: wsl
       arguments:
@@ -37,9 +30,9 @@ resources:
         - -e
         - pwsh
         - -File
-        - "[[parameters('RepoRootLinux')]]/Invoke-WslBootstrap.ps1"
+        - "/tmp/Invoke-WslBootstrap.ps1" # We will handle pathing in the script
         - -RepoPath
-        - "[[parameters('RepoRootLinux')]]"
+        - "/tmp"
 
   - name: Install Visual Studio Code
     type: Microsoft.WinGet/Package
@@ -116,7 +109,7 @@ resources:
   - name: Manage Global WSL Settings (.wslconfig)
     type: PSDscResources/File
     properties:
-      DestinationPath: "[[parameters('UserProfile')]]\\.wslconfig"
+      DestinationPath: "$HOME/.wslconfig" # Using environment variable symbol
       Contents: |
         [wsl2]
         memory=8GB

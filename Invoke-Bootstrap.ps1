@@ -29,14 +29,26 @@ $repoRootWsl = (wsl -e wslpath -u "$repoRootWin").Trim()
 Write-Host "📍 User Profile: $userProfile" -ForegroundColor Gray
 Write-Host "📍 WSL Repo Root: $repoRootWsl" -ForegroundColor Gray
 
+Write-Host "🧩 Resolving configuration template..." -ForegroundColor Yellow
+$configTemplate = Get-Content -Path ".\configuration.yaml" -Raw
+$resolvedConfig = $configTemplate `
+    -replace "\{\{USER_PROFILE\}\}", $userProfile.Replace('\', '\\') `
+    -replace "\{\{REPO_ROOT_WSL\}\}", $repoRootWsl
+
+$resolvedPath = ".\resolved-configuration.yaml"
+$resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
+
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
 $applyArgs = @(
     "configure",
-    "--file", ".\configuration.yaml",
-    "--accept-configuration-agreements",
-    "--parameter", "UserProfile=$userProfile",
-    "--parameter", "RepoRootLinux=$repoRootWsl"
+    "--file", $resolvedPath,
+    "--accept-configuration-agreements"
 )
 & winget @applyArgs
+
+# Cleanup temporary file
+if (Test-Path $resolvedPath) {
+    Remove-Item $resolvedPath
+}
 
 Write-Host "✅ Setup completed successfully!" -ForegroundColor Green
