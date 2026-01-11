@@ -40,9 +40,84 @@ $resolvedConfig = $configTemplate `
 $resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
 $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
 
-# Show what will be configured
-Write-Host "📋 Resources to be configured:" -ForegroundColor Cyan
-& winget configure test --file $resolvedPath --ignore-warnings
+# Test configuration and show drift
+# DSC CLI requires resourceId() syntax for dependsOn, but WinGet uses simple names
+# We transform on-the-fly for testing, keeping the source file WinGet-compatible
+Write-Host "📋 Checking configuration drift..." -ForegroundColor Cyan
+Write-Host ""
+
+# Build name-to-type map from the config
+$nameToType = @{}
+$configLines = $resolvedConfig -split "`n"
+$currentName = $null
+foreach ($line in $configLines) {
+    if ($line -match '^\s*-?\s*name:\s*(.+)$') {
+        $currentName = $matches[1].Trim()
+    }
+    if ($currentName -and $line -match '^\s*type:\s*(.+)$') {
+        $nameToType[$currentName] = $matches[1].Trim()
+        $currentName = $null
+    }
+}
+
+# Transform dependsOn from simple names to resourceId() syntax for DSC
+$dscConfig = $resolvedConfig
+foreach ($name in $nameToType.Keys) {
+    $type = $nameToType[$name]
+    # Replace "name" with "[resourceId('type', 'name')]" in dependsOn contexts
+    $dscConfig = $dscConfig -replace "(?<=dependsOn:\s*\n(?:\s*-\s*.*\n)*\s*-\s*)""$name""", """[resourceId('$type', '$name')]"""
+}
+
+# Remove PSDesiredStateConfiguration/File resources (DSC parser can't handle multiline Contents)
+# These will still be applied by WinGet, just not drift-tested
+$dscConfig = $dscConfig -replace '(?ms)^\s*-\s*name:\s*\S+\s*\n\s*type:\s*PSDesiredStateConfiguration/File.*?(?=^\s*-\s*name:|\z)', ''
+
+$dscTestPath = "$PSScriptRoot\dsc-test-configuration.yaml"
+$dscConfig | Out-File -FilePath $dscTestPath -Encoding utf8
+
+# Try DSC test first (shows actual drift), fallback to WinGet test
+# TODO: When WinGet improves drift detection, this can be simplified
+$dscOutput = & dsc config test --file $dscTestPath 2>&1 | Out-String
+
+if ($dscOutput -match '\"inDesiredState\"') {
+    # Parse JSON and show drift status
+    # Extract JSON portion (skip any WARN/ERROR lines before the JSON)
+    $jsonStart = $dscOutput.IndexOf('{')
+    if ($jsonStart -ge 0) {
+        $jsonOutput = $dscOutput.Substring($jsonStart)
+    } else {
+        $jsonOutput = $dscOutput
+    }
+    
+    try {
+        $results = $jsonOutput | ConvertFrom-Json
+        foreach ($resource in $results.results) {
+            $name = $resource.name
+            $type = $resource.type
+            $inDesiredState = $resource.result.inDesiredState
+            
+            if ($inDesiredState -eq $true) {
+                Write-Host "✅ $type [$name]" -ForegroundColor Green
+            } else {
+                Write-Host "⚠️  $type [$name] - DRIFT DETECTED" -ForegroundColor Yellow
+            }
+        }
+    } catch {
+        Write-Host "⚠️ JSON parse error: $_" -ForegroundColor Red
+        Write-Host $dscOutput
+    }
+} else {
+    # Fallback to WinGet test (no drift info, just resource list)
+    Write-Host "⚠️  DSC test failed. Error output:" -ForegroundColor Yellow
+    Write-Host $dscOutput -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "Falling back to WinGet test (no drift detection)..." -ForegroundColor Yellow
+    & winget configure test --file $resolvedPath --ignore-warnings
+}
+
+# Cleanup DSC test file
+if (Test-Path $dscTestPath) { Remove-Item $dscTestPath }
+Write-Host ""
 
 # Exit early if test mode
 if ($Test) {
