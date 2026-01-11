@@ -107,7 +107,7 @@ resources:
       source: winget
 
   - name: wslconfig-file
-    type: PSDscResources/File
+    type: PSDesiredStateConfiguration/File
     properties:
       DestinationPath: "{{USER_PROFILE}}\\.wslconfig"
       Contents: |
