@@ -1,8 +1,5 @@
 [CmdletBinding()]
 param(
-    [Parameter(HelpMessage = "Run test only without applying the configuration.")]
-    [switch]$Test,
-    
     [Parameter(HelpMessage = "Skip confirmation prompt and apply changes immediately.")]
     [switch]$Force
 )
@@ -10,28 +7,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Starting PC Bootstrap Setup..." -ForegroundColor Cyan
-if ($Test) {
-    Write-Host "🧪 Running in TEST MODE (no changes will be applied)" -ForegroundColor Magenta
-}
 
 # Check if winget is available
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     Write-Error "❌ winget is not installed or not in PATH. Please install it from the Microsoft Store."
     exit 1
-}
-
-Write-Host "🔍 Validating configuration..." -ForegroundColor Yellow
-$validateArgs = @(
-    "--file", "$PSScriptRoot\configuration.yaml",
-    "--ignore-warnings"
-)
-& winget configure validate @validateArgs
-
-# Exit code 1 = warnings only (acceptable with --ignore-warnings)
-# Exit code > 1 = actual failure
-if ($LASTEXITCODE -gt 1) {
-    Write-Error "❌ Configuration validation failed with exit code $LASTEXITCODE."
-    exit $LASTEXITCODE
 }
 
 # Resolve template placeholders
@@ -52,25 +32,14 @@ $resolvedConfig = $configTemplate `
 $resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
 $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
 
-# Always run test to show drift
-Write-Host "🔬 Comparing configuration against current system state..." -ForegroundColor Cyan
-$testArgs = @(
-    "--file", $resolvedPath,
-    "--ignore-warnings"
-)
-& winget configure test @testArgs
-
-# Exit early if test mode
-if ($Test) {
-    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
-    Write-Host "✅ Test complete. (No changes applied)" -ForegroundColor Green
-    exit 0
-}
+# Show what will be configured
+Write-Host "📋 Resources to be configured:" -ForegroundColor Cyan
+& winget configure test --file $resolvedPath --ignore-warnings
 
 # Prompt for confirmation unless -Force is specified
 if (-not $Force) {
     Write-Host ""
-    $response = Read-Host "❓ Do you want to apply these changes? (y/N)"
+    $response = Read-Host "❓ Apply configuration now? (y/N)"
     if ($response -notmatch "^[Yy]$") {
         if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
         Write-Host "🚫 Cancelled. No changes applied." -ForegroundColor Yellow
@@ -78,13 +47,9 @@ if (-not $Force) {
     }
 }
 
+# Apply configuration
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
-$applyArgs = @(
-    "--file", $resolvedPath,
-    "--accept-configuration-agreements",
-    "--ignore-warnings"
-)
-& winget configure @applyArgs
+& winget configure --file $resolvedPath --accept-configuration-agreements --ignore-warnings
 
 # Cleanup temporary file
 if (Test-Path $resolvedPath) {
