@@ -65,6 +65,7 @@ When using **Context7** for updates, use the following Library ID:
 - **DependsOn**: Must use the format `"[ResourceType]ResourceName"`. 
   - *Example*: `"[Microsoft.WinGet/Package]Install Windows Subsystem for Linux"`
 - **Flattening**: Unlike 0.2.0 which used `directives` and `settings`, DSCv3 flattens these into top-level keys like `name`, `type`, `dependsOn`, and `properties`.
+- **Parameterization**: We use the `[[parameters('name')]]` syntax for dynamic paths. These are passed during execution via the `--parameter` flag in `Invoke-Bootstrap.ps1`.
 
 ### 🔍 Sources & Discovery
 The information for advanced resources like `Microsoft.Windows.Settings/WindowsSettings` was sourced from:
@@ -72,7 +73,7 @@ The information for advanced resources like `Microsoft.Windows.Settings/WindowsS
 - **Resource Investigation**: Use the `dsc` CLI to discover schemas directly on your machine:
   - `dsc resource list`: Shows all available resources.
   - `dsc resource schema --resource <Name>`: Shows the exact properties (like `AppColorMode` or `TaskbarAlignment`).
-- **Visual Reference**: Community snippets often circulate with `allowPrerelease: true` to unlock early-access DSCv3 features.
+- **Dynamic Paths**: To avoid hardcoding user profiles, `Invoke-Bootstrap.ps1` detects `$env:USERPROFILE` and the WSL mirror path (via `wslpath`) and injects them into the configuration at runtime.
 
 ---
 

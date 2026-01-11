@@ -1,7 +1,11 @@
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$RepoPath
+)
+
 $ErrorActionPreference = "Stop"
 
-$repoPath = "/home/jjr/projects/repos/pc.bootstrap"
-$configPath = "$repoPath/wsl-tools.yaml"
+$configPath = "$RepoPath/wsl-tools.yaml"
 
 Write-Host "🚀 Initializing WSL Interior Environment..." -ForegroundColor Cyan
 

@@ -21,11 +21,21 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
+$userProfile = $env:USERPROFILE
+$repoRootWin = $PSScriptRoot
+$repoRootWsl = (wsl -e wslpath -u "$repoRootWin").Trim()
+
+Write-Host "📍 User Profile: $userProfile" -ForegroundColor Gray
+Write-Host "📍 WSL Repo Root: $repoRootWsl" -ForegroundColor Gray
+
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
 $applyArgs = @(
     "configure",
     "--file", ".\configuration.yaml",
-    "--accept-configuration-agreements"
+    "--accept-configuration-agreements",
+    "--parameter", "UserProfile=$userProfile",
+    "--parameter", "RepoRootLinux=$repoRootWsl"
 )
 & winget @applyArgs
 

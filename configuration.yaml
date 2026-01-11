@@ -1,4 +1,11 @@
 $schema: https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2024/04/config/document.json
+parameters:
+  UserProfile:
+    type: string
+    description: Windows User Profile path
+  RepoRootLinux:
+    type: string
+    description: Repository root path inside WSL
 resources:
   - name: Install Windows Subsystem for Linux
     type: Microsoft.WinGet/Package
@@ -26,7 +33,9 @@ resources:
         - -e
         - pwsh
         - -File
-        - /home/jjr/projects/repos/pc.bootstrap/Invoke-WslBootstrap.ps1
+        - "[[parameters('RepoRootLinux')]]/Invoke-WslBootstrap.ps1"
+        - -RepoPath
+        - "[[parameters('RepoRootLinux')]]"
 
   - name: Install Visual Studio Code
     type: Microsoft.WinGet/Package
@@ -103,7 +112,7 @@ resources:
   - name: Manage Global WSL Settings (.wslconfig)
     type: PSDscResources/File
     properties:
-      DestinationPath: C:\Users\jjr\.wslconfig
+      DestinationPath: "[[parameters('UserProfile')]]\.wslconfig"
       Contents: |
         [wsl2]
         memory=8GB
