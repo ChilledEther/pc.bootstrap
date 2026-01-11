@@ -97,17 +97,29 @@ resources:
         localhostForwarding=true
       Ensure: Present
 
-  - name: WindowsSettings
+  - name: WinGet Admin Settings
+    type: Microsoft.WinGet/AdminSettings
+    metadata:
+      securityContext: elevated
+    properties:
+      settings:
+        LocalManifestFiles: false
+        ProxyCommandLineOptions: false
+        BypassCertificatePinningForMicrosoftStore: false
+        InstallerHashOverride: false
+        LocalArchiveMalwareScanOverride: false
+
+  - name: Windows Personalization Settings
     type: Microsoft.Windows.Settings/WindowsSettings
     metadata:
       allowPrerelease: true
-      description: Configure Windows Settings
+      description: Configure Core Windows UI/UX
       securityContext: elevated
     properties:
       AppColorMode: Dark
       SystemColorMode: Dark
       DeveloperMode: true
-      TaskbarAlignment: Center
+      TaskbarAlignment: Middle
 
   - name: Show Hidden Files in Explorer
     type: Microsoft.Windows/Registry
