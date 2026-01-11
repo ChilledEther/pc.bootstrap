@@ -1,5 +1,8 @@
 [CmdletBinding()]
 param(
+    [Parameter(HelpMessage = "Run test only without applying.")]
+    [switch]$Test,
+    
     [Parameter(HelpMessage = "Skip confirmation prompt and apply changes immediately.")]
     [switch]$Force
 )
@@ -35,6 +38,13 @@ $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
 # Show what will be configured
 Write-Host "📋 Resources to be configured:" -ForegroundColor Cyan
 & winget configure test --file $resolvedPath --ignore-warnings
+
+# Exit early if test mode
+if ($Test) {
+    if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
+    Write-Host "✅ Test complete. (No changes applied)" -ForegroundColor Green
+    exit 0
+}
 
 # Prompt for confirmation unless -Force is specified
 if (-not $Force) {
