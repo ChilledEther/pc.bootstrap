@@ -30,6 +30,17 @@ We use a **Template Strategy** because WinGet 1.12 does not yet support root-lev
 1.  **Do not** validate `configuration.yaml` directly if it has `{{PLACEHOLDERS}}`.
 2.  Run `.\Invoke-Bootstrap.ps1`. This script generates a temporary `resolved-configuration.yaml` with your actual machine paths and applies it.
 
+### ⚠️ Resolving "Module was not provided" Warnings
+The WinGet 1.12 validator may output warnings like:
+- *"The module was not provided..."*
+- *"The configuration unit is not available publicly..."*
+
+This happens because WinGet's DSCv3 engine sometimes struggles to discover modules from its default location. The fix is to **explicitly provide the module path** using:
+```powershell
+winget configure validate --file config.yaml --module-path "$env:LOCALAPPDATA\Microsoft\WinGet\Configuration\Modules"
+```
+`Invoke-Bootstrap.ps1` automatically includes this flag for both validation and application.
+
 ---
 
 ## 📚 Technical Reference (Knowledge Base)

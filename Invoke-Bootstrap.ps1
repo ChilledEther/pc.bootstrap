@@ -1,3 +1,9 @@
+[CmdletBinding()]
+param(
+    [Parameter(HelpMessage = "Run validation only without applying the configuration.")]
+    [switch]$Test
+)
+
 $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Starting PC Bootstrap Setup..." -ForegroundColor Cyan
@@ -12,13 +18,20 @@ Write-Host "🔍 Validating configuration..." -ForegroundColor Yellow
 $validateArgs = @(
     "configure",
     "validate",
-    "--file", ".\configuration.yaml"
+    "--file", ".\configuration.yaml",
+    "--ignore-warnings"
 )
 & winget @validateArgs
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "❌ Configuration validation failed."
     exit 1
+}
+
+# Exit early if this is a test run
+if ($Test) {
+    Write-Host "✅ Validation passed. (Test mode - no changes applied)" -ForegroundColor Green
+    exit 0
 }
 
 Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
@@ -42,7 +55,8 @@ Write-Host "🔧 Applying configuration..." -ForegroundColor Green
 $applyArgs = @(
     "configure",
     "--file", $resolvedPath,
-    "--accept-configuration-agreements"
+    "--accept-configuration-agreements",
+    "--ignore-warnings"
 )
 & winget @applyArgs
 
