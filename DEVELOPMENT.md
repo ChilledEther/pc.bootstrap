@@ -15,6 +15,26 @@ The project transitioned from a static `tools.yaml` manifest to a fully declarat
 | `wsl-tools.yaml` | Modular WSL tool manifest. | Compressed YAML, Enabled/Disabled toggles. |
 | `Invoke-WslBootstrap.ps1` | WSL-side automation. | PowerShell-based, APT/Brew/Bun handling. |
 
+### 📦 Prerequisites (DSC Modules)
+
+Before running the bootstrap, ensure the following DSC modules are installed. These provide the native resources used in the configuration:
+
+```powershell
+# Check available resources
+dsc resource list
+
+# Required modules (typically pre-installed with DSC v3)
+# - PSDesiredStateConfiguration/File  (for .wslconfig management)
+# - Microsoft.WinGet/Package          (for app installations)
+# - Microsoft.Windows/Registry        (for registry tweaks)
+# - Microsoft.Windows.Settings/WindowsSettings (for system preferences)
+```
+
+If `PSDesiredStateConfiguration/File` is missing, install the module:
+```powershell
+Install-Module -Name PSDesiredStateConfiguration -Scope CurrentUser -Force
+```
+
 ---
 
 ## 🛠️ Maintenance Guide
