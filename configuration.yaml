@@ -12,27 +12,19 @@ resources:
       id: Microsoft.WSL
       source: winget
 
-  # Ubuntu distribution via WSL CLI
-  # Using PSDscResources/Script (modern Script resource, no WinRM)
+  # Ubuntu distribution via WinGet
   - name: ubuntu-distro
-    type: PSDscResources/Script
+    type: Microsoft.WinGet/Package
     dependsOn:
       - "[resourceId('Microsoft.WinGet/Package', 'wsl-app')]"
     properties:
-      GetScript: |
-        $distro = wsl --list --quiet | Where-Object { $_ -match "Ubuntu" }
-        return @{ Result = if ($distro) { "Present" } else { "Absent" } }
-      TestScript: |
-        $distro = wsl --list --quiet | Where-Object { $_ -match "Ubuntu" }
-        return [bool]$distro
-      SetScript: |
-        Write-Host "Installing Ubuntu via WSL..."
-        wsl --install -d Ubuntu
+      id: Canonical.Ubuntu
+      source: winget
 
   - name: wsl-environment-init
     type: Microsoft.DSC.Transitional/RunCommandOnSet
     dependsOn:
-      - "[resourceId('PSDscResources/Script', 'ubuntu-distro')]"
+      - "[resourceId('Microsoft.WinGet/Package', 'ubuntu-distro')]"
     properties:
       executable: wsl
       arguments:
