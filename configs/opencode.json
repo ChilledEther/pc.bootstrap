@@ -1,0 +1,53 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "plugin": [
+        "opencode-antigravity-auth",
+        "opencode-quotas"
+    ],
+    "provider": {
+        "google": {
+            "models": {
+                "antigravity-gemini-3-pro-high": {
+                    "name": "Gemini 3 Pro (High) [Antigravity]"
+                },
+                "antigravity-gemini-3-pro-low": {
+                    "name": "Gemini 3 Pro (Low) [Antigravity]"
+                },
+                "antigravity-gemini-3-flash": {
+                    "name": "Gemini 3 Flash [Antigravity]"
+                },
+                "antigravity-claude-sonnet-4-5": {
+                    "name": "Claude Sonnet 4.5 [Antigravity]"
+                },
+                "antigravity-claude-sonnet-4-5-thinking": {
+                    "name": "Claude Sonnet 4.5 (Thinking) [Antigravity]",
+                    "options": {
+                        "thinking": "medium"
+                    }
+                },
+                "antigravity-claude-opus-4-5-thinking": {
+                    "name": "Claude Opus 4.5 (Thinking) [Antigravity]",
+                    "options": {
+                        "thinking": "high"
+                    }
+                },
+                "antigravity-gpt-oss-120b": {
+                    "name": "GPT-OSS 120B (Medium) [Antigravity]"
+                },
+                "gemini-3-flash": {
+                    "name": "Gemini 3 Flash [Gemini CodeAssist]",
+                    "options": {
+                        "endpoint": "standard"
+                    }
+                },
+                "gemini-3-pro": {
+                    "name": "Gemini 3 Pro [Gemini CodeAssist]",
+                    "options": {
+                        "endpoint": "standard"
+                    }
+                }
+            }
+        }
+    },
+    "model": "google/antigravity-gemini-3-flash"
+}
