@@ -4,73 +4,77 @@ A modern, declarative approach to setting up and configuring a Windows developme
 
 ## ✨ Features
 
-- **Declarative Setup**: Manage Windows packages and OS settings using clean YAML configuration
-- **Drift Detection**: See what's already configured vs. what needs changes
-- **Automated Installation**: One command to install VS Code, Docker, WSL, and more
-- **Native DSCv3**: Uses the latest DSC engine for reliable, independent configuration
-- **WSL Integration**: Automatically bootstraps your Linux development environment
+- **Declarative Setup**: Manage Windows packages and OS settings using clean YAML configuration.
+- **Drift Detection**: See what's already configured vs. what needs changes.
+- **Automated Installation**: One command to install VS Code, Docker, WSL, and more.
+- **Native DSCv3**: Uses the latest DSC engine for reliable, independent configuration.
+- **WSL Integration**: Automatically bootstraps your Linux development environment including PowerShell and DSC.
 
 ## 📦 Prerequisites
 
-- **Windows 11** or **Windows 10** (latest updates)
-- **App Installer** (WinGet) installed via the Microsoft Store
-- **Administrative Privileges** for system-wide configurations
+- **Windows 11** or **Windows 10** (latest updates).
+- **App Installer** (WinGet) installed via the Microsoft Store.
+- **Administrative Privileges** for system-wide configurations.
 
 ## 🛠️ Quick Start
 
-### Test Configuration (Dry Run)
-See what's already in desired state and what would change:
-```powershell
-.\Invoke-Bootstrap.ps1 -Test
-```
+### Windows Setup
 
-### Apply Configuration
 Run the bootstrap interactively (shows drift, asks for confirmation):
+
 ```powershell
-.\Invoke-Bootstrap.ps1
+.\setup.ps1
 ```
 
-### Force Apply (No Confirmation)
-For automation/CI scenarios:
-```powershell
-.\Invoke-Bootstrap.ps1 -Force
-```
+**Common Flags:**
 
-### Validate Syntax Only
-```powershell
-.\Invoke-Lint.ps1
+- `-Test`: Run in dry-run mode (see drift only).
+- `-Force`: Apply changes immediately without confirmation.
+
+### Linux/WSL Setup
+
+The Windows setup automatically triggers the WSL bootstrap. To run it manually inside WSL:
+
+```bash
+./scripts/bootstrap-linux.sh
 ```
 
 ## 📂 Repository Structure
 
-```
+```text
 pc.bootstrap/
-├── configuration.yaml      # Main DSCv3 configuration (template)
-├── Invoke-Bootstrap.ps1    # Main automation script
-├── Invoke-Lint.ps1         # Configuration syntax validator
-├── Invoke-WslBootstrap.ps1 # WSL environment setup
-├── wsl-tools.yaml          # WSL development tools manifest
-├── DEVELOPMENT.md          # Development guide
-└── docs/                   # Detailed documentation
-    ├── dsc-resources.md    # DSCv3 resource reference
-    └── scripts.md          # Script usage reference
+├── configuration.yaml         # Main DSCv3 configuration (Windows)
+
+├── setup.ps1                  # Entry point (Proxy to scripts/Invoke-WindowsSetup.ps1)
+├── configs/                   # Dotfiles and configuration templates
+├── docs/                      # Documentation
+│   ├── development.md         # Development guide
+│   └── dsc-resources.md       # DSCv3 resource reference
+└── scripts/                   # Implementation scripts
+    ├── Invoke-WindowsSetup.ps1 # Main Windows automation logic
+    ├── Invoke-WslBootstrap.ps1 # WSL internal setup logic (PowerShell)
+    ├── Invoke-Lint.ps1         # Configuration syntax validator
+    ├── bootstrap-linux.sh      # Initial WSL bootstrapper (Bash)
+    └── Install-Dsc.ps1         # Standalone DSC v3 installer
 ```
 
 ## 🐧 WSL Configuration
 
 The bootstrap automatically:
-1. Enables WSL and VirtualMachinePlatform Windows features
-2. Installs Ubuntu via WinGet
-3. Runs `Invoke-WslBootstrap.ps1` inside WSL to set up development tools
 
-WSL tools are defined in `wsl-tools.yaml` (APT packages, Homebrew formulas, Bun packages).
+1. Enables WSL and VirtualMachinePlatform Windows features.
+2. Installs Ubuntu via WinGet.
+3. Runs `scripts/bootstrap-linux.sh` inside WSL, which:
+   - Installs **PowerShell** and **DSC v3** if missing.
+   - Executes `scripts/Invoke-WslBootstrap.ps1` to install tools (Apt, Homebrew).
+
+WSL tools are defined directly within `scripts/Invoke-WslBootstrap.ps1`.
 
 ## 📚 Documentation
 
-- **[DEVELOPMENT.md](DEVELOPMENT.md)** - Development guide and quick reference
-- **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource types reference
-- **[docs/scripts.md](docs/scripts.md)** - Script usage and parameters
+- **[docs/development.md](docs/development.md)** - Development guide and quick reference.
+- **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource types reference.
 
 ---
 
-*Maintained with ❤️ by Antigravity*
+_Maintained with ❤️ by Antigravity_

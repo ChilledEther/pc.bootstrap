@@ -23,7 +23,7 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Functional check to catch "File cannot be accessed" (1920) or "Invalid directory" (267) errors early
+# Functional check for WinGet
 try {
     $wingetCheck = winget --version 2>&1
     if ($LASTEXITCODE -ne 0) {
@@ -44,40 +44,38 @@ try {
 # Resolve template placeholders
 Write-Host "🔍 Detecting dynamic paths..." -ForegroundColor Yellow
 $userProfile = $env:USERPROFILE
-$repoRootWin = $PSScriptRoot
+$repoRootWin = Resolve-Path "$PSScriptRoot\.."
 $repoRootWsl = (wsl -e wslpath -u "$repoRootWin").Trim()
 
 Write-Host "📍 User Profile: $userProfile" -ForegroundColor Gray
 Write-Host "📍 WSL Repo Root: $repoRootWsl" -ForegroundColor Gray
 
 Write-Host "🧩 Resolving configuration template..." -ForegroundColor Yellow
-$configTemplate = Get-Content -Path "$PSScriptRoot\configuration.yaml" -Raw
+$configPath = Join-Path $repoRootWin "configuration.yaml"
+$configTemplate = Get-Content -Path $configPath -Raw
 $resolvedConfig = $configTemplate `
     -replace "\{\{USER_PROFILE\}\}", $userProfile.Replace('\', '\\') `
     -replace "\{\{REPO_ROOT_WSL\}\}", $repoRootWsl
 
-$resolvedPath = "$PSScriptRoot\resolved-configuration.yaml"
+$resolvedPath = Join-Path $repoRootWin "resolved-configuration.yaml"
 $resolvedConfig | Out-File -FilePath $resolvedPath -Encoding utf8
 
 # Test configuration and show drift
 Write-Host "📋 Checking configuration drift..." -ForegroundColor Cyan
 Write-Host ""
 
-# Run DSC test using the resolved configuration directly
-# Switch to a local Windows directory to avoid 'Invalid Directory' errors when running from WSL
+# Run DSC test using splatting
 Push-Location $env:TEMP
-$dscOutput = dsc config test --file $resolvedPath 2>&1 | Out-String
+$testArgs = @(
+    "config", "test",
+    "--file", $resolvedPath
+)
+$dscOutput = dsc @testArgs 2>&1 | Out-String
 Pop-Location
 
 if ($dscOutput -match '\"inDesiredState\"') {
-    # Parse JSON and show drift status
-    # Extract JSON portion (skip any WARN/ERROR lines before the JSON)
     $jsonStart = $dscOutput.IndexOf('{')
-    if ($jsonStart -ge 0) {
-        $jsonOutput = $dscOutput.Substring($jsonStart)
-    } else {
-        $jsonOutput = $dscOutput
-    }
+    $jsonOutput = if ($jsonStart -ge 0) { $dscOutput.Substring($jsonStart) } else { $dscOutput }
     
     try {
         $results = $jsonOutput | ConvertFrom-Json
@@ -95,19 +93,15 @@ if ($dscOutput -match '\"inDesiredState\"') {
                 $desired = $resource.result.desiredState
                 $diffs = $resource.result.differingProperties
                 
-                # Unwrap 'properties' if present
                 if ($actual.properties) { $actual = $actual.properties }
                 if ($desired.properties) { $desired = $desired.properties }
                 
                 if ($desired) {
                     foreach ($prop in $desired.PSObject.Properties.Name) {
                         $desiredVal = $desired.$prop
-                        
-                        # Check if this property is explicitly listed in the 'differingProperties' array
                         $isDiff = $diffs -contains $prop
                         
                         if ($isDiff) {
-                            # Try to get actual value, but fall back to 'Unknown' if the provider doesn't return it during test
                             $actualVal = if ($actual.$prop -ne $null) { $actual.$prop } else { "Unknown" }
                             Write-Host "    - $($prop): '$($actualVal)' -> Desired: '$($desiredVal)'" -ForegroundColor Gray
                         }
@@ -121,12 +115,8 @@ if ($dscOutput -match '\"inDesiredState\"') {
     }
 } else {
     Write-Host "❌ DSC test phase failed to execute correctly!" -ForegroundColor Red
-    Write-Host ""
-    Write-Host $dscOutput -ForegroundColor Gray
-    Write-Host ""
     if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
     Write-Error "Test phase failed. Cannot proceed safely."
-    exit 1
 }
 
 # Exit early if test mode
@@ -136,7 +126,7 @@ if ($Test) {
     exit 0
 }
 
-# Prompt for confirmation unless -Force is specified
+# Prompt for confirmation
 if (-not $Force) {
     Write-Host ""
     $response = Read-Host "❓ Apply configuration now? (y/N)"
@@ -147,32 +137,28 @@ if (-not $Force) {
     }
 }
 
-# Apply configuration using native DSC
+# Apply configuration
 Write-Host "🔧 Applying configuration..." -ForegroundColor Green
 Push-Location $env:TEMP
-$setConfigOutput = dsc config set --file $resolvedPath 2>&1 | Out-String
+$setArgs = @(
+    "config", "set",
+    "--file", $resolvedPath
+)
+$setConfigOutput = dsc @setArgs 2>&1 | Out-String
 Pop-Location
 
-# Parse the set output to verify success
+# Verify success
 $setSuccess = $true
-if ($setConfigOutput -match '\"hadErrors\":\s*true') {
-    $setSuccess = $false
-} elseif ($LASTEXITCODE -ne 0) {
+if ($setConfigOutput -match '\"hadErrors\":\s*true' -or $LASTEXITCODE -ne 0) {
     $setSuccess = $false
 }
 
-# Cleanup temporary file before potentially exiting
-if (Test-Path $resolvedPath) {
-    Remove-Item $resolvedPath
-}
+if (Test-Path $resolvedPath) { Remove-Item $resolvedPath }
 
 if (-not $setSuccess) {
     Write-Host "❌ Apply failed! See error output below:" -ForegroundColor Red
-    Write-Host ""
     Write-Host $setConfigOutput -ForegroundColor Gray
-    Write-Host ""
     Write-Error "Configuration apply failed. Please review the errors above."
-    exit 1
 }
 
-Write-Host "✅ Setup completed successfully!" -ForegroundColor Green
+Write-Host "✨ Setup completed successfully!" -ForegroundColor Green

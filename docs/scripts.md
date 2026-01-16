@@ -4,29 +4,34 @@ This document describes the PowerShell scripts in the pc.bootstrap project.
 
 ---
 
-## Invoke-Bootstrap.ps1
+## setup.ps1
 
-The main bootstrap automation script.
+The root entry point script that proxies to `scripts/Invoke-WindowsSetup.ps1`.
+
+## scripts/Invoke-WindowsSetup.ps1
+
+The main Windows bootstrap automation engine.
 
 ### Usage
 
 ```powershell
-# Interactive mode: show drift, ask for confirmation, then apply
-.\Invoke-Bootstrap.ps1
+# Interactive mode (shows drift, asks for confirmation)
+.\setup.ps1
 
-# Test mode: show drift only, no changes applied
-.\Invoke-Bootstrap.ps1 -Test
+# Test mode (shows drift only)
+.\setup.ps1 -Test
 
-# Force mode: skip confirmation, apply immediately
-.\Invoke-Bootstrap.ps1 -Force
+# Force mode (skip confirmation, apply immediately)
+.\setup.ps1 -Force
+
 ```
 
 ### Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
-| `-Test` | Switch | Run drift detection only, don't apply changes |
-| `-Force` | Switch | Skip confirmation prompt, apply immediately |
+| Parameter | Type   | Description                                   |
+| :-------- | :----- | :-------------------------------------------- |
+| `-Test`   | Switch | Run drift detection only, don't apply changes |
+| `-Force`  | Switch | Skip confirmation prompt, apply immediately   |
 
 ### Workflow
 
@@ -45,10 +50,10 @@ The main bootstrap automation script.
 
 The script resolves these placeholders in `configuration.yaml`:
 
-| Placeholder | Replaced With | Example |
-| :--- | :--- | :--- |
-| `{{USER_PROFILE}}` | `$env:USERPROFILE` | `C:\Users\jarre` |
-| `{{REPO_ROOT_WSL}}` | WSL path to repo | `/home/jjr/projects/repos/pc.bootstrap` |
+| Placeholder         | Replaced With      | Example                                 |
+| :------------------ | :----------------- | :-------------------------------------- |
+| `{{USER_PROFILE}}`  | `$env:USERPROFILE` | `C:\Users\jarre`                        |
+| `{{REPO_ROOT_WSL}}` | WSL path to repo   | `/home/jjr/projects/repos/pc.bootstrap` |
 
 ---
 
@@ -59,10 +64,11 @@ Validates the configuration YAML syntax.
 ### Usage
 
 ```powershell
-.\Invoke-Lint.ps1
+.\scripts\Invoke-Lint.ps1
 ```
 
 ### What It Does
+
 - Runs `dsc config validate` (planned) or basic validation
 - Returns exit code 0 on success, non-zero on failure
 
@@ -82,16 +88,18 @@ wsl -u root -e pwsh -File /path/to/Invoke-WslBootstrap.ps1 -RepoPath /path/to/re
 
 ### Parameters
 
-| Parameter | Type | Description |
-| :--- | :--- | :--- |
+| Parameter   | Type   | Description                                |
+| :---------- | :----- | :----------------------------------------- |
 | `-RepoPath` | String | Absolute path to the repository inside WSL |
 
 ### What It Installs
 
-Reads from `wsl-tools.yaml` and installs:
-- APT packages (git, curl, etc.)
-- Homebrew packages (yq, gh, etc.)
-- Bun packages (via Homebrew-installed Bun)
+Installs tools directly defined in the script:
+
+- APT packages (git, powershell, curl, etc.)
+- Homebrew packages (bun, uv, gh, etc.)
+- Sets up global profile persistence
+- Creates an onboarding marker at `/root/.wsl-bootstrapped`
 
 ---
 
@@ -99,10 +107,10 @@ Reads from `wsl-tools.yaml` and installs:
 
 These files are created during execution and should be gitignored:
 
-| File | Purpose |
-| :--- | :--- |
+| File                          | Purpose                                  |
+| :---------------------------- | :--------------------------------------- |
 | `resolved-configuration.yaml` | Configuration with placeholders resolved |
 
 ---
 
-*Reference for pc.bootstrap project*
+_Reference for pc.bootstrap project_

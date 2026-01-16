@@ -21,21 +21,20 @@ resources:
       id: Canonical.Ubuntu
       source: winget
 
-  # - name: wsl-environment-init
-  #   type: Microsoft.DSC.Transitional/RunCommandOnSet
-  #   dependsOn:
-  #     - "[resourceId('Microsoft.WinGet/Package', 'ubuntu-distro')]"
-  #   properties:
-  #     executable: wsl
-  #     arguments:
-  #       - -u
-  #       - root
-  #       - -e
-  #       - pwsh
-  #       - -File
-  #       - "{{REPO_ROOT_WSL}}/Invoke-WslBootstrap.ps1"
-  #       - -RepoPath
-  #       - "{{REPO_ROOT_WSL}}"
+  - name: wsl-environment-init
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    dependsOn:
+      - "[resourceId('Microsoft.WinGet/Package', 'ubuntu-distro')]"
+    properties:
+      testScript: |
+        $result = wsl -u root -e bash -c "[ -f /root/.wsl-bootstrapped ] && echo true || echo false"
+        return ($result.Trim() -eq "true")
+      setScript: |
+        Write-Output "🚀 Initializing WSL environment..."
+        wsl -u root -e /bin/bash "{{REPO_ROOT_WSL}}/scripts/bootstrap-linux.sh"
+      getScript: |
+        $result = wsl -u root -e bash -c "[ -f /root/.wsl-bootstrapped ] && echo true || echo false"
+        return @{ _inDesiredState = ($result.Trim() -eq "true") }
 
   - name: vscode-package
     type: Microsoft.WinGet/Package
