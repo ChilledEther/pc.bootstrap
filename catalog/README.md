@@ -4,9 +4,6 @@ This directory contains a custom catalog of MCP servers for use with `docker-mcp
 
 ## Servers Included
 
-- **cloudrun**: Official Google Cloud Run MCP Server
-- **context7**: Context7 MCP Server (Latest Info/Search)
-- **github**: Official GitHub MCP Server
 - **mcp-github-agentic**: Local Custom GitHub Agentic MCP Server
 
 ## Usage
@@ -20,7 +17,7 @@ A PowerShell script `setup-catalog.ps1` is provided to automate the setup and re
 .\Setup-Catalog.ps1
 ```
 
-*Note: This script only sets up the catalog file. You may still need to run `docker mcp config reset` and `docker mcp install <server>` to activate specific tools.*
+*Note: This script sets up the catalog file and installs the `mcp-github-agentic` server.*
 
 **To Restore the Default Catalog:**
 ```powershell
@@ -52,9 +49,6 @@ To override the default Docker catalog (which often contains 300+ tools) and use
    docker mcp config reset
 
    # Enable only your specific servers
-   docker mcp install cloudrun
-   docker mcp install context7
-   docker mcp install github
    docker mcp install mcp-github-agentic
    ```
 

@@ -6,5 +6,7 @@ registry:
   mcp-github-agentic:
     title: MCP GitHub Agentic
     type: server
-    image: mcp-github-agentic:latest
+    runtime: docker
+    docker:
+      image: mcp-github-agentic:latest
     description: "Local Custom GitHub Agentic MCP Server"
