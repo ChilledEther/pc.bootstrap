@@ -11,11 +11,32 @@ This directory contains a custom catalog of MCP servers for use with `docker-mcp
 
 ## Usage
 
-### Make this the Default Catalog
+### Automation Script (Windows/PowerShell)
+
+A PowerShell script `setup-catalog.ps1` is provided to automate the setup and restoration processes.
+
+**To Install the Custom Catalog:**
+```powershell
+.\Setup-Catalog.ps1
+```
+
+*Note: This script only sets up the catalog file. You may still need to run `docker mcp config reset` and `docker mcp install <server>` to activate specific tools.*
+
+**To Restore the Default Catalog:**
+```powershell
+.\Setup-Catalog.ps1 -Restore
+```
+
+---
+
+### Manual Method
+
+#### Make this the Default Catalog
 
 To override the default Docker catalog (which often contains 300+ tools) and use only these specific servers in Docker Desktop:
 
 1. **Link the catalog file**:
+
    ```bash
    # Backup existing config
    mv ~/.docker/mcp/docker-mcp.yaml ~/.docker/mcp/docker-mcp.yaml.bak
@@ -25,6 +46,7 @@ To override the default Docker catalog (which often contains 300+ tools) and use
    ```
 
 2. **Reset and Re-enable**:
+
    ```bash
    # Clear the current enabled registry
    docker mcp config reset
@@ -61,6 +83,7 @@ docker mcp catalog bootstrap ./official-starter-catalog.yaml
 #### Manual Method
 
 1. **Restore the original catalog file**:
+
    ```bash
    # Remove the symlink to the custom catalog
    rm ~/.docker/mcp/docker-mcp.yaml
@@ -70,9 +93,10 @@ docker mcp catalog bootstrap ./official-starter-catalog.yaml
    ```
 
 2. **Reset configuration**:
+
    ```bash
    # Reset the registry and config to defaults
    docker mcp config reset
    ```
 
-   *Note: If you didn't keep a backup, the official catalog will typically be re-downloaded the next time the CLI needs it or after a `config reset`.*
+   _Note: If you didn't keep a backup, the official catalog will typically be re-downloaded the next time the CLI needs it or after a `config reset`._
