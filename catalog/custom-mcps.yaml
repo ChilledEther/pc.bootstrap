@@ -25,3 +25,4 @@ registry:
         - mcp
       license: "MIT"
       owner: chilledether
+      publisher: chilledether
