@@ -4,9 +4,14 @@ displayName: Custom MCPs
 publisher: chilledether
 registry:
   mcp-github-agentic:
+    description: "A specialized MCP server for agentic GitHub operations, enabling AI models to interactively manage repositories, issues, and pull requests with advanced tool capabilities."
     title: MCP GitHub Agentic
     type: server
-    runtime: docker
-    docker:
-      image: mcp-github-agentic:latest
-    description: "Local Custom GitHub Agentic MCP Server"
+    image: mcp-github-agentic:latest
+    metadata:
+      category: development
+      tags:
+        - github
+        - agentic
+        - mcp
+      owner: chilledether

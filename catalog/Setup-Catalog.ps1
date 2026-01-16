@@ -19,7 +19,7 @@ if ($Restore) {
     foreach ($server in $servers) {
         if (-not [string]::IsNullOrWhiteSpace($server)) {
             Write-Host "Installing MCP server: $server"
-            docker mcp install $server
+            docker mcp server enable $server
         }
     }
 }
