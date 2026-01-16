@@ -2,10 +2,24 @@
 param([switch]$Restore)
 
 if ($Restore) {
-    docker.exe mcp catalog reset
+    docker mcp catalog reset
 } else {
-    $path = Join-Path $PSScriptRoot "mcp-servers.yaml"
-    if ($IsLinux) { $path = wslpath -w $path }
+    $yamlPath = Join-Path $PSScriptRoot "custom-mcps.yaml"
+    $importPath = $yamlPath
+
+    if ($IsLinux) { 
+        $importPath = wslpath -w $yamlPath 
+    }
     
-    docker.exe mcp catalog import $PSScriptRoot/custom-mcps.yaml
+    docker mcp catalog import $importPath
+
+    # Parse registry keys using yq and install each server
+    $servers = @(yq '.registry | keys | .[]' $yamlPath)
+    
+    foreach ($server in $servers) {
+        if (-not [string]::IsNullOrWhiteSpace($server)) {
+            Write-Host "Installing MCP server: $server"
+            docker mcp install $server
+        }
+    }
 }

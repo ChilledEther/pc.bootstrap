@@ -17,7 +17,7 @@ A PowerShell script `setup-catalog.ps1` is provided to automate the setup and re
 .\Setup-Catalog.ps1
 ```
 
-*Note: This script sets up the catalog file and installs the `mcp-github-agentic` server.*
+*Note: This script sets up the catalog file and automatically installs all servers defined in it.*
 
 **To Restore the Default Catalog:**
 ```powershell
@@ -39,7 +39,7 @@ To override the default Docker catalog (which often contains 300+ tools) and use
    mv ~/.docker/mcp/docker-mcp.yaml ~/.docker/mcp/docker-mcp.yaml.bak
 
    # Link this custom catalog
-   ln -s ~/projects/repos/pc.bootstrap/catalog/mcp-servers.yaml ~/.docker/mcp/docker-mcp.yaml
+   ln -s ~/projects/repos/pc.bootstrap/catalog/custom-mcps.yaml ~/.docker/mcp/docker-mcp.yaml
    ```
 
 2. **Reset and Re-enable**:
