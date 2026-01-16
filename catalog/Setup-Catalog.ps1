@@ -1,45 +1,25 @@
 <#
 .SYNOPSIS
-    Simplified script to set up the Docker MCP Custom Catalog.
+    Imports the custom MCP catalog natively via docker.exe.
 #>
 [cmdletBinding()]
 param([switch]$Restore)
 $ErrorActionPreference = 'Stop'
 
-# 1. Resolve Home Directories
-if ($IsLinux) {
-    # Get Windows home without UNC path warnings by changing to C: first
-    $WinHome = cmd.exe /c "cd /d C:\ && echo %USERPROFILE%" | Select-Object -Last 1
-    $WinHome = $WinHome.Trim()
-    
-    # Manual WSL path conversion
-    if ($WinHome -match '^([A-Z]):(.*)') {
-        $drive = $Matches[1].ToLower()
-        $rest = $Matches[2] -replace '\\', '/'
-        $WslHome = "/mnt/$drive$rest"
-    } else {
-        $WslHome = $WinHome -replace '\\', '/'
-    }
-} else {
-    $WinHome = $env:USERPROFILE
-    $WslHome = $WinHome
-}
-
-$TargetFileWSL = "$WslHome/.docker/mcp/docker-mcp.yaml"
-$TargetFileWin = "$WinHome\.docker\mcp\docker-mcp.yaml"
+# 1. Resolve local path to mcp-servers.yaml (Windows style for docker.exe)
+$LocalPath = Join-Path $PSScriptRoot "mcp-servers.yaml"
+$LocalPathWin = if ($IsLinux) { wslpath -w "$LocalPath" } else { $LocalPath }
 
 if ($Restore) {
-    Write-Host "Restoring default catalog..." -ForegroundColor Yellow
-    if (Test-Path $TargetFileWSL) { Remove-Item $TargetFileWSL -Force }
-    & docker.exe mcp catalog bootstrap "$TargetFileWin"
+    Write-Host "Restoring official Docker catalog..." -ForegroundColor Yellow
+    & docker.exe mcp catalog reset
     Write-Host "Default catalog restored." -ForegroundColor Green
 } else {
-    Write-Host "Installing custom catalog..." -ForegroundColor Cyan
-    $Source = Join-Path $PSScriptRoot "mcp-servers.yaml"
+    Write-Host "Importing custom catalog from $LocalPathWin..." -ForegroundColor Cyan
     
-    $Dir = Split-Path $TargetFileWSL
-    if (-not (Test-Path $Dir)) { New-Item -ItemType Directory -Path $Dir -Force | Out-Null }
+    # Provide the catalog name 'custom-catalog' natively
+    # If the user wants to replace the list, we recommend they select this catalog in Docker Desktop
+    "custom-catalog" | & docker.exe mcp catalog import "$LocalPathWin"
     
-    Copy-Item -Path $Source -Destination $TargetFileWSL -Force
-    Write-Host "Custom catalog installed to $TargetFileWSL" -ForegroundColor Green
+    Write-Host "Success! Custom catalog imported as 'custom-catalog'." -ForegroundColor Green
 }

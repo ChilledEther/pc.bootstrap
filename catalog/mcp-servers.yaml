@@ -1,24 +1,20 @@
-# Custom MCP Server Catalog
-# Defined for docker-mcp-gateway
-
-servers:
+version: 3
+name: docker-mcp
+displayName: Docker MCP Catalog
+registry:
   cloudrun:
     image: mcp/cloudrun
     description: "Official Google Cloud Run MCP Server"
-    source: "official"
-
+    title: Cloud Run
   context7:
     image: mcp/context7
-    description: "Context7 MCP Server for latest information and search"
-    source: "official"
-
+    description: "Context7 MCP Server"
+    title: Context7
   github:
     image: mcp/github
     description: "Official GitHub MCP Server"
-    source: "official"
-
+    title: GitHub
   mcp-github-agentic:
     image: mcp-github-agentic:latest
     description: "Local Custom GitHub Agentic MCP Server"
-    source: "custom"
-    local: true
+    title: MCP GitHub Agentic
