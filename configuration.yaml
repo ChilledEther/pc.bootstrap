@@ -67,6 +67,22 @@ resources:
       id: Docker.DockerDesktop
       source: winget
 
+  - name: create-custom-mcp-catalog
+    type: Microsoft.DSC.Transitional/PowerShellScript
+    dependsOn:
+      - "[resourceId('Microsoft.WinGet/Package', 'docker-desktop-package')]"
+    properties:
+      testScript: |
+        $catalogs = docker mcp catalog ls
+        return ($catalogs -match 'custom-mcps')
+      setScript: |
+        Write-Output '📦 Creating custom MCP catalog...'
+        docker mcp catalog create custom-mcps
+      getScript: |
+        $catalogs = docker mcp catalog ls
+        $exists = [bool]($catalogs -match 'custom-mcps')
+        return @{ _inDesiredState = $exists }
+
   - name: git-package
     type: Microsoft.WinGet/Package
     properties:
