@@ -1,62 +1,45 @@
 <#
 .SYNOPSIS
-    Script to manage Docker MCP Catalog
-    Location: /home/jjr/projects/repos/pc.bootstrap/catalog/setup-catalog.ps1
+    Simplified script to set up the Docker MCP Custom Catalog.
 #>
-
 [cmdletBinding()]
-param (
-    [switch]$Restore
-)
+param([switch]$Restore)
+$ErrorActionPreference = 'Stop'
 
-$CatalogDir = $PSScriptRoot
-if (-not $CatalogDir) { $CatalogDir = Get-Location }
-
-$ConfigDir = Join-Path $env:USERPROFILE ".docker\mcp"
-$ConfigFile = Join-Path $ConfigDir "docker-mcp.yaml"
-$BackupFile = "$ConfigFile.bak"
-$SourceCatalog = Join-Path $CatalogDir "mcp-servers.yaml"
-
-function Install-CustomCatalog {
-    Write-Host "--- Installing Custom Catalog ---" -ForegroundColor Cyan
+# 1. Resolve Home Directories
+if ($IsLinux) {
+    # Get Windows home without UNC path warnings by changing to C: first
+    $WinHome = cmd.exe /c "cd /d C:\ && echo %USERPROFILE%" | Select-Object -Last 1
+    $WinHome = $WinHome.Trim()
     
-    if (-not (Test-Path $SourceCatalog)) {
-        Write-Error "Source catalog $SourceCatalog not found."
-        return
+    # Manual WSL path conversion
+    if ($WinHome -match '^([A-Z]):(.*)') {
+        $drive = $Matches[1].ToLower()
+        $rest = $Matches[2] -replace '\\', '/'
+        $WslHome = "/mnt/$drive$rest"
+    } else {
+        $WslHome = $WinHome -replace '\\', '/'
     }
-
-    if (-not (Test-Path $ConfigDir)) {
-        New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
-    }
-
-    if ((Test-Path $ConfigFile) -and (-not (Get-Item $ConfigFile).LinkType)) {
-        Write-Host "Backing up existing catalog to $BackupFile"
-        Copy-Item -Path $ConfigFile -Destination $BackupFile -Force
-    }
-
-    Write-Host "Linking $SourceCatalog to $ConfigFile"
-    # Note: Requires administrative privileges for symlinks or Developer Mode enabled on Windows
-    New-Item -ItemType SymbolicLink -Path $ConfigFile -Target $SourceCatalog -Force | Out-Null
-    
-    Write-Host "Success! Custom catalog is now active." -ForegroundColor Green
+} else {
+    $WinHome = $env:USERPROFILE
+    $WslHome = $WinHome
 }
 
-function Restore-DefaultCatalog {
-    Write-Host "--- Restoring Default Catalog ---" -ForegroundColor Yellow
-    
-    if (Test-Path $ConfigFile) {
-        Write-Host "Removing existing catalog file/link..."
-        Remove-Item -Path $ConfigFile -Force
-    }
-
-    Write-Host "Running native bootstrap to restore defaults..."
-    docker.exe mcp catalog bootstrap $ConfigFile
-    
-    Write-Host "Default catalog restored successfully." -ForegroundColor Green
-}
+$TargetFileWSL = "$WslHome/.docker/mcp/docker-mcp.yaml"
+$TargetFileWin = "$WinHome\.docker\mcp\docker-mcp.yaml"
 
 if ($Restore) {
-    Restore-DefaultCatalog
+    Write-Host "Restoring default catalog..." -ForegroundColor Yellow
+    if (Test-Path $TargetFileWSL) { Remove-Item $TargetFileWSL -Force }
+    & docker.exe mcp catalog bootstrap "$TargetFileWin"
+    Write-Host "Default catalog restored." -ForegroundColor Green
 } else {
-    Install-CustomCatalog
+    Write-Host "Installing custom catalog..." -ForegroundColor Cyan
+    $Source = Join-Path $PSScriptRoot "mcp-servers.yaml"
+    
+    $Dir = Split-Path $TargetFileWSL
+    if (-not (Test-Path $Dir)) { New-Item -ItemType Directory -Path $Dir -Force | Out-Null }
+    
+    Copy-Item -Path $Source -Destination $TargetFileWSL -Force
+    Write-Host "Custom catalog installed to $TargetFileWSL" -ForegroundColor Green
 }
