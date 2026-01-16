@@ -1,0 +1,10 @@
+version: 3
+name: custom-mcps
+displayName: Custom MCPs
+publisher: chilledether
+registry:
+  mcp-github-agentic:
+    title: MCP GitHub Agentic
+    type: server
+    image: mcp-github-agentic:latest
+    description: "Local Custom GitHub Agentic MCP Server"
