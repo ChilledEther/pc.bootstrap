@@ -13,8 +13,8 @@ if ($Restore) {
     
     docker mcp catalog import $importPath
 
-    # Parse registry keys using yq and install each server
-    $servers = @(yq '.registry | keys | .[]' $yamlPath)
+    # Parse servers keys using yq and install each server
+    $servers = @(yq '.servers | keys | .[]' $yamlPath)
     
     foreach ($server in $servers) {
         if (-not [string]::IsNullOrWhiteSpace($server)) {
