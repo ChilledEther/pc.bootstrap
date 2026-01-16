@@ -2,16 +2,26 @@ version: 3
 name: custom-mcps
 displayName: Custom MCPs
 publisher: chilledether
-registry:
+servers:
   mcp-github-agentic:
     description: "A specialized MCP server for agentic GitHub operations, enabling AI models to interactively manage repositories, issues, and pull requests with advanced tool capabilities."
     title: MCP GitHub Agentic
     type: server
+    dateAdded: "2026-01-16T12:00:00Z"
     image: mcp-github-agentic:latest
+    ref: ""
+    tools:
+      - name: repository_management
+    prompts: 0
+    resources: {}
     metadata:
+      pulls: 0
+      stars: 0
+      githubStars: 0
       category: development
       tags:
         - github
         - agentic
         - mcp
+      license: "MIT"
       owner: chilledether
