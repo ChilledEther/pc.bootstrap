@@ -44,18 +44,12 @@ The Windows setup automatically triggers the WSL bootstrap. To run it manually i
 ```text
 pc.bootstrap/
 ├── configuration.yaml         # Main DSCv3 configuration (Windows)
-
 ├── setup.ps1                  # Entry point (Proxy to scripts/Invoke-WindowsSetup.ps1)
 ├── configs/                   # Dotfiles and configuration templates
 ├── docs/                      # Documentation
-│   ├── development.md         # Development guide
-│   └── dsc-resources.md       # DSCv3 resource reference
+│   ├── guide.md               # Architecture & Script guide
+│   └── resources.md           # DSCv3 resource reference
 └── scripts/                   # Implementation scripts
-    ├── Invoke-WindowsSetup.ps1 # Main Windows automation logic
-    ├── Invoke-WslBootstrap.ps1 # WSL internal setup logic (PowerShell)
-    ├── Invoke-Lint.ps1         # Configuration syntax validator
-    ├── bootstrap-linux.sh      # Initial WSL bootstrapper (Bash)
-    └── Install-Dsc.ps1         # Standalone DSC v3 installer
 ```
 
 ## 🐧 WSL Configuration
@@ -72,8 +66,8 @@ WSL tools are defined directly within `scripts/Invoke-WslBootstrap.ps1`.
 
 ## 📚 Documentation
 
-- **[docs/development.md](docs/development.md)** - Development guide and quick reference.
-- **[docs/dsc-resources.md](docs/dsc-resources.md)** - DSCv3 resource types reference.
+- **[docs/guide.md](docs/guide.md)** - Comprehensive architecture and usage guide.
+- **[docs/resources.md](docs/resources.md)** - Deep dive into DSCv3 resource types.
 
 ---
 
