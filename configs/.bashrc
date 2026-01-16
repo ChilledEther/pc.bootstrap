@@ -1,5 +1,5 @@
 ag() {
-    local AG_EXE="/mnt/c/Users/jarre/AppData/Local/Programs/Antigravity/bin/antigravity"
+    local AG_EXE="/mnt/c/Users/x/AppData/Local/Programs/Antigravity/bin/antigravity"
     # Fallback to 'Ubuntu' or your preferred distro name if the variable is missing
     local DISTRO="${WSL_DISTRO_NAME:-Ubuntu}"
     local TARGET="${1:-.}"
